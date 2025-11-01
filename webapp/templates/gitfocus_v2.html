@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=1280, initial-scale=0.5, user-scalable=yes">
+    <title>GitFocus Planner V2 - Apprentissage Intelligent</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gitfocus_v2.css') }}">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container header-inline">
+            <h1>🎯 GitFocus Planner V2 <span style="font-size: 0.6em; color: #6b7280;">{{ server_version }}</span></h1>
+
+            <div class="date-selector">
+                <label for="planning-date">📅 Date:</label>
+                <input type="date" id="planning-date" />
+                <button id="btn-today" class="btn btn-secondary">Aujourd'hui</button>
+            </div>
+
+            <div class="actions">
+                <button id="btn-refresh" class="btn btn-secondary">🔄 Rafraîchir</button>
+                <button id="btn-stats" class="btn btn-info">📊 Statistiques</button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Mobile Tabs (visible only on mobile) -->
+    <div class="mobile-tabs">
+        <button class="mobile-tab active" data-tab="tasks">📋 Tâches</button>
+        <button class="mobile-tab" data-tab="planning">📅 Planning</button>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container main-container">
+        <!-- Left Panel: Task Selection -->
+        <div class="panel panel-left" data-panel="tasks">
+            <h2>📋 Sélection des Tâches</h2>
+
+            <!-- Pomodoro Tasks Section -->
+            <section class="task-section">
+                <div class="section-header">
+                    <h3>🔴 Tâches Pomodoro (Travail)</h3>
+                    <span class="task-count" id="pomodoro-count">0 tâches</span>
+                </div>
+                <div class="task-list" id="pomodoro-task-list">
+                    <div class="loading">Chargement...</div>
+                </div>
+            </section>
+
+            <!-- Recurrent Tasks (Click to Add) -->
+            <section class="task-section">
+                <div class="section-header">
+                    <h3>🟣 Tâches Récurrentes</h3>
+                    <span class="task-count">
+                        <span id="recurrent-count">0 tâches</span>
+                        <span class="badge badge-info">Cliquez pour ajouter au planning</span>
+                    </span>
+                </div>
+                <div class="info-box">
+                    <p><strong>💡 Mode Manuel:</strong></p>
+                    <p>Cliquez sur une tâche pour l'ajouter à la première place libre du planning. Vous pouvez ajouter la même tâche plusieurs fois.</p>
+                </div>
+                <div id="recurrent-tasks-list" class="task-list">
+                    <div class="loading">Chargement des tâches récurrentes...</div>
+                </div>
+            </section>
+
+            <!-- Generate Button -->
+            <div class="action-bar">
+                <button id="btn-generate" class="btn btn-primary btn-large">
+                    ⚡ Générer Planning Intelligent
+                </button>
+            </div>
+        </div>
+
+        <!-- Right Panel: Planning Display -->
+        <div class="panel panel-right" data-panel="planning">
+            <h2>📊 Planning Généré</h2>
+
+            <!-- Planning Stats -->
+            <div id="planning-stats" class="stats-bar" style="display: none;">
+                <div class="stat">
+                    <span class="stat-label">Total</span>
+                    <span class="stat-value" id="stat-total">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Travail</span>
+                    <span class="stat-value" id="stat-work">0 min</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Pauses</span>
+                    <span class="stat-value" id="stat-pause">0 min</span>
+                </div>
+            </div>
+
+            <!-- Recurrent Task Scores (Transparency) -->
+            <div id="recurrent-scores" class="recurrent-scores" style="display: none;">
+                <h4>🧠 Scores des Tâches Récurrentes Sélectionnées</h4>
+                <div id="scores-list" class="scores-list"></div>
+            </div>
+
+            <!-- Planning Timeline -->
+            <div id="planning-display" class="planning-display">
+                <div class="empty-state">
+                    <p>Aucun planning généré</p>
+                    <p class="small">Sélectionnez des tâches Pomodoro et générez le planning</p>
+                </div>
+            </div>
+
+            <!-- Export Button -->
+            <div class="action-bar">
+                <button id="btn-export" class="btn btn-success btn-large" style="display: none;">
+                    📥 Exporter Planning (CSV)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Modal -->
+    <div id="stats-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>📊 Statistiques Historique Apprentissage</h2>
+            <div id="stats-content">
+                <div class="loading">Chargement...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="loading-overlay" style="display: none;">
+        <div class="spinner"></div>
+        <p>Génération du planning intelligent...</p>
+    </div>
+
+    <!-- JavaScript -->
+    <script src="{{ url_for('static', filename='js/gitfocus_v2.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,4 @@
+"ID";"NAME";"DESCRIPTION";"CATEGORY";"SUB_CATEGORY";"DURATION_MIN";"REMAINING_MIN";"PRIORITY";"TAGS";"KEYWORDS";"DEPENDENCIES";"NOTES";"DEADLINE";"FIXED_START";"PLANNED_START";"STATUS"
+"1";"Installer machine virtuelle pre-prod";"";"Développement";"Planification";"200";"200";"1";"";"";"";"";"";"";"";"available"
+"2";"fabriquer les cloches";"";"Développement";"Planification";"200";"200";"2";"";"";"";"";"";"";"";"available"
+"3";"debugger gitfocus web";"";"Développement";"Planification";"500";"500";"1";"";"";"";"";"";"";"";"available"

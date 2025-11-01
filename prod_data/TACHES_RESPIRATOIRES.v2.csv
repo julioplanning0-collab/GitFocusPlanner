@@ -1,0 +1,10 @@
+ID;NAME;DESCRIPTION;CATEGORY;SUB_CATEGORY;DURATION_MIN;REPEAT_INTERVAL_MIN;LAST_DONE_TIMESTAMP;LAST_DONE_DATE;EARLIEST_TIME;LATEST_TIME;IDEAL_TIME;PRIORITY;TAGS;KEYWORDS;DEPENDENCIES;NOTES;STATUS;EXPORT_COUNT
+R010;Méditation;Séance de méditation guidée ou libre;Bien-être;Mental;10;1440;;;;23:00;21:00;2;soins;;;;available;0
+R018;Pause café;Prendre un café;Petit-déjeuner;Boisson;15;1440;;;06:00;20:00;08:30|14:00;1;extra;;;;available;0
+R019;Petit-déjeuner;Manger le petit-déjeuner;Petit-déjeuner;Repas;20;1440;;;06:00;11:00;08:00;1;extra;;;;available;0
+R020;Pause thé;Prendre un thé;Petit-déjeuner;Boisson;10;1440;;;06:00;20:00;10:00|15:00|20:00;1;extra;;;;available;0
+R021;Pause repos;Faire une pause de repos;Pause;Repos;5;1440;;;;;10:30|15:00|17:00;1;extra;;;;available;0
+R022;Micro-marche;Marcher 5 minutes;Pause;Mouvement;5;10080;;;;;;1;extra;;;;available;0
+R023;Exercice respiratoire;Faire des exercices de respiration;Bien-être;Respiration;5;10080;;;;;;1;extra;;;;available;0
+R028;Contemplation;Regarder dehors par la fenêtre;Pause;Repos;5;1440;;;;23:30;;2;extra;;;;available;0
+R029;Lecture courte;Lire un article court;Lecture;Information;10;1440;;;;23:30;;2;extra;;;;available;0

@@ -1,0 +1,133 @@
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║         GitFocus Planner V2 - Démarrage Ultra-Rapide        ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────┐
+│  LANCEMENT EN 1 CLIC                                         │
+└──────────────────────────────────────────────────────────────┘
+
+  1. Double-cliquez sur:  LANCEMENT.bat
+
+  2. L'interface web s'ouvre automatiquement:
+     → http://localhost:5000/api/v2/gitfocus/interface
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  LANCEMENT MANUEL                                            │
+└──────────────────────────────────────────────────────────────┘
+
+  1. Ouvrir terminal dans ce dossier
+
+  2. Taper: python -m webapp.server
+
+  3. Ouvrir navigateur:
+     → http://localhost:5000/api/v2/gitfocus/interface
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  VÉRIFICATION SYSTÈME                                        │
+└──────────────────────────────────────────────────────────────┘
+
+  python scripts\verify.py
+
+  → Vérifie que tous les fichiers sont présents
+  → Teste tous les endpoints API
+  → Affiche les URLs d'accès
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  DOCUMENTATION                                               │
+└──────────────────────────────────────────────────────────────┘
+
+  DEMARRAGE_RAPIDE.md ........ Guide démarrage en 3 étapes
+  README.md .................. Vue d'ensemble + architecture
+  STATUS_PROJET.md ........... État du projet (checklist complète)
+  SPECIFICATIONS_COMPLETES_V2.md .. Specs détaillées (2050 lignes)
+  CLAUDE.md .................. Bonnes pratiques développement
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  WORKFLOW UTILISATEUR                                        │
+└──────────────────────────────────────────────────────────────┘
+
+  1. Sélectionner 2-3 tâches Pomodoro (travail)
+
+  2. Cliquer "⚡ Générer Planning Intelligent"
+     → Le système sélectionne automatiquement les 10 meilleures
+       tâches récurrentes via scoring intelligent
+
+  3. Vérifier le planning généré (timeline visuelle)
+
+  4. Cliquer "📥 Exporter Planning (CSV)"
+     → Écrit planned.csv pour l'app Android
+     → Enregistre historique pour apprentissage
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  SYSTÈME D'APPRENTISSAGE INTELLIGENT                         │
+└──────────────────────────────────────────────────────────────┘
+
+  Le système s'améliore automatiquement avec le temps!
+
+  Scoring 4 critères (0-100 points):
+    • 50% Récurrence DUE (urgence - tâches en retard)
+    • 20% Fréquence jour semaine (habitudes - lundi → arrosage)
+    • 15% Fréquence globale (popularité - tâches souvent utilisées)
+    • 15% Récence (actualité - tâches récentes)
+
+  Évolution:
+    Mois 1  → Scoring basé surtout sur urgence
+    Mois 2  → Détection patterns simples
+    Mois 6  → Patterns clairs (ex: "Arroser plantes" → 80% lundi 08:00)
+    Année 1 → Système très précis, adapté à vos habitudes
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  PROBLÈMES COURANTS                                          │
+└──────────────────────────────────────────────────────────────┘
+
+  Port 5000 déjà utilisé:
+    → Fermer autres serveurs Flask/Python sur port 5000
+    → Ou changer PORT dans webapp\config.py
+
+  Interface ne charge pas:
+    → Vérifier que le serveur est démarré (voir console)
+    → Faire Ctrl+F5 pour forcer rechargement cache navigateur
+
+  Fichiers CSV manquants:
+    → Lancer: python scripts\verify.py
+    → Vérifier que prod_data/ contient tous les CSV requis
+
+
+┌──────────────────────────────────────────────────────────────┐
+│  FICHIERS IMPORTANTS                                         │
+└──────────────────────────────────────────────────────────────┘
+
+  prod_data/planning_placements_history.csv
+    → JAMAIS SUPPRIMER - Historique apprentissage cumulatif
+    → Plus il y a de données, meilleur est le système
+
+  prod_data/LISTE_MERE.v2.csv
+    → Vos tâches Pomodoro (travail)
+
+  prod_data/TACHES_RECURRENTES.v2.csv
+    → 88 tâches récurrentes (ménage, soins, exercices, etc.)
+
+  prod_data/planned.csv
+    → Planning exporté (lu par l'app Android)
+
+
+╔══════════════════════════════════════════════════════════════╗
+║                                                              ║
+║  🚀 L'APPLICATION EST PRÊTE!                                 ║
+║                                                              ║
+║  Double-cliquez sur LANCEMENT.bat pour commencer            ║
+║                                                              ║
+╚══════════════════════════════════════════════════════════════╝
+
+
+Version: 2.0 (Apprentissage Intelligent)
+Date: 2025-10-30
+Architecture: Backend-first, REST API, Learning System

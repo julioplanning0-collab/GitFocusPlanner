@@ -1,0 +1,3 @@
+ID;INDEX;TITLE;DESCRIPTION;TYPE;DOMAINE;SUB1;DIFFICULTY;DONE_AT;SKIPPED;FEEDBACK;ACTUAL_DURATION_MIN;SCHEDULED_DURATION_MIN
+"1";"1";"Task 1";"";"WORK";"";"";"1";"2025-10-29T00:14:40.168000";"True";"mood:0,energy:0,flow:0,difficulty:0,completion:0";"";"25"
+"R001";"2";"Task 2";"";"WORK";"";"";"1";"2025-10-29T00:15:01.115000";"True";"mood:0,energy:0,flow:0,difficulty:0,completion:0";"";"25"
