@@ -90,7 +90,7 @@
 
 ---
 
-## 📋 Phase 4: Nouvelles Fonctionnalités (PLANIFIÉ)
+## 🔄 Phase 4: Nouvelles Fonctionnalités (EN COURS - 60%)
 
 ### Fonctionnalités à Implémenter
 1. **Clopes** (cigarette breaks)
@@ -106,12 +106,37 @@
    - Mode optionnel (checkbox)
    - Permet d'avoir plusieurs pauses sans Pomodoros entre elles
 
-### API Changes
-- Ajouter paramètres optionnels:
+### ✅ Frontend Complété (gitfocus_v2.html + gitfocus_v2.js)
+- ✅ Section "Options Avancées" avec 3 contrôles
+- ✅ Checkbox "Pauses Cigarettes" + input intervalle (défaut 120 min)
+- ✅ Checkbox "Câlins (1 tous les 2 respirations)"
+- ✅ Checkbox "Autoriser Pauses Consécutives"
+- ✅ Toggle automatique pour afficher/masquer options clopes
+- ✅ Fonction `generatePlanning()` modifiée pour envoyer paramètres
+
+### ✅ API Route Complétée (routes_gitfocus_v2.py)
+- ✅ Documentation mise à jour avec nouveaux paramètres:
   - `enable_clopes`: boolean
   - `clopes_interval_min`: number (défaut 120)
   - `enable_calins`: boolean
-  - `pauses_consecutives`: boolean
+  - `allow_consecutive_pauses`: boolean
+- ✅ Extraction des paramètres depuis request body
+- ✅ Logs DEBUG ajoutés
+- ✅ Appel à `generate_planning_auto()` avec nouveaux params
+
+### ⏳ Backend À Implémenter (planning_generator.py)
+- [ ] Modifier signature `generate_planning_auto()` pour accepter paramètres
+- [ ] Implémenter logique insertion clopes:
+  * Compter durées cumulées (Pomodoros + Respirations + Câlins)
+  * Insérer pause clope tous les X minutes (configurable)
+- [ ] Implémenter logique insertion câlins:
+  * Insérer 1 câlin tous les 2 respirations
+  * Type = 'calin' dans planning
+- [ ] Implémenter support pauses consécutives:
+  * Désactiver alternance stricte si option activée
+  * Permettre Respiration → Respiration directement
+
+**Commit**: `269bb7c` - "feat: Phase 4 (partiel) - Frontend et API pour options avancées"
 
 ---
 
