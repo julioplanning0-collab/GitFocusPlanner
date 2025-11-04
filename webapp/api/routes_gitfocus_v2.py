@@ -172,7 +172,9 @@ def generate_planning_auto():
     Request Body:
         {
             "date": "2025-10-30",
+            "start_time": "18:30",  # 🆕 Optional (HH:MM format, will calculate if not provided)
             "pomodoro_task_ids": ["1", "2", "3"],
+            "respiration_task_ids": ["R_001", "R_002", "R_001"],  # 🆕 Can contain duplicates
             "max_recurrent_tasks": 10
         }
 
@@ -194,21 +196,27 @@ def generate_planning_auto():
             return jsonify({'success': False, 'error': 'Missing request body'}), 400
 
         date = data.get('date')
+        start_time = data.get('start_time')  # 🆕 HH:MM format (optional, will calculate if not provided)
         pomodoro_ids = data.get('pomodoro_task_ids', [])
+        respiration_ids = data.get('respiration_task_ids', [])  # 🆕 Can contain duplicates
         max_recurrent = data.get('max_recurrent_tasks', 10)
 
         if not date:
             return jsonify({'success': False, 'error': 'Missing date'}), 400
 
         logger.info(f"🔍 DEBUG: Generating auto planning for {date}")
+        logger.info(f"🔍 DEBUG: start_time: {start_time}")
         logger.info(f"🔍 DEBUG: Received {len(pomodoro_ids)} Pomodoro IDs: {pomodoro_ids}")
+        logger.info(f"🔍 DEBUG: Received {len(respiration_ids)} Respiration IDs: {respiration_ids}")
         logger.info(f"🔍 DEBUG: max_recurrent_tasks: {max_recurrent}")
 
         from backend.planning_engine.planning_generator import generate_planning_auto
 
         result = generate_planning_auto(
             date=date,
+            start_time=start_time,
             pomodoro_ids=pomodoro_ids,
+            respiration_ids=respiration_ids,
             data_dir=Config.DATA_DIR,
             max_recurrent_tasks=max_recurrent
         )

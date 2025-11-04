@@ -53,30 +53,40 @@
 
 ---
 
-## 🔄 Phase 3: Support respiration_ids + start_time (EN COURS)
+## ✅ Phase 3: Support respiration_ids + start_time (COMPLÈTE)
 
-### Modifications State
+### Modifications Frontend (gitfocus_v2.js)
 - ✅ Ajouté `planningStartTime` (HH:MM format)
 - ✅ Ajouté `respirationTasks` (liste disponible)
 - ✅ Ajouté `selectedRespirationIds` (peut contenir duplicatas)
+- ✅ Créé `loadRespirationTasks()`: Charge tâches respiratoires depuis API
+- ✅ Créé `renderRespirationTasks()`: Affichage avec compteurs (x2, x3...)
+- ✅ Créé `toggleRespirationSelection()`: Sélection avec duplicatas
+- ✅ Créé `calculateStartTime()`: now + 15min arrondi à 5
+- ✅ Modifié `generatePlanning()` pour envoyer `start_time` et `respiration_task_ids`
 
-### Fonctions Ajoutées
-- ✅ `loadRespirationTasks()`: Charge tâches respiratoires depuis API
-- ⏳ `renderRespirationTasks()`: À créer (affichage UI)
-- ⏳ `toggleRespirationSelection()`: À créer (sélection avec compteurs)
+### Modifications Backend (planning_generator.py)
+- ✅ Modifié signature `generate_planning_auto()`:
+  - Ajouté paramètre `start_time: Optional[str]`
+  - Ajouté paramètre `respiration_ids: Optional[List[str]]`
+- ✅ Implémenté logique de chargement des tâches respiratoires
+  - Préserve les duplicatas dans `respiration_ids`
+  - Cycle à travers les IDs fournis pour l'alternance
+- ✅ Implémenté détection automatique du type de pause:
+  - Si `respiration_ids` fourni → type='respiration'
+  - Sinon → fallback vers recurrent tasks avec scoring
+- ✅ Modifié `_generate_base_planning()`:
+  - Renommé paramètre `recurrent_tasks` → `pause_tasks`
+  - Détection automatique du type (respiration vs recurrent)
+  - Utilise le type détecté dans les slots générés
 
-### Modifications API Call
-- ✅ `generatePlanning()` modifié pour envoyer:
-  - `start_time`: Heure de départ calculée
-  - `respiration_task_ids`: Liste des IDs (avec duplicatas possibles)
+### Tests Effectués
+- ✅ Test avec `respiration_ids` → alternance Pomodoro/Respiration
+- ✅ Test sans `respiration_ids` → fallback vers recurrent tasks
+- ✅ Vérification des duplicatas → même ID apparaît plusieurs fois
+- ✅ Vérification des types → 'respiration' vs 'recurrent' vs 'pause'
 
-### À Faire
-- [ ] Créer `renderRespirationTasks()` pour afficher la liste
-- [ ] Ajouter section HTML "Tâches Respiratoires" dans template
-- [ ] Implémenter fonction `calculateStartTime()` (now + 15min arrondi à 5)
-- [ ] Initialiser `planningStartTime` au chargement de la page
-- [ ] Gérer la sélection avec compteurs (x2, x3...)
-- [ ] Modifier backend pour accepter `start_time` et `respiration_task_ids`
+**Résultat**: Phase 3 100% fonctionnelle ✅
 
 ---
 

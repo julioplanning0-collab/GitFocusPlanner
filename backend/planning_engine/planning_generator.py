@@ -30,6 +30,8 @@ def generate_planning_auto(
     date: str,
     pomodoro_ids: List[str],
     data_dir: Path,
+    start_time: Optional[str] = None,
+    respiration_ids: Optional[List[str]] = None,
     max_recurrent_tasks: int = 10
 ) -> Dict:
     """
@@ -41,6 +43,8 @@ def generate_planning_auto(
         date: Target date (YYYY-MM-DD)
         pomodoro_ids: List of selected Pomodoro task IDs
         data_dir: Path to prod_data/ directory
+        start_time: Planning start time HH:MM (optional, will calculate now+15min if not provided)
+        respiration_ids: List of respiration task IDs (can contain duplicates, optional)
         max_recurrent_tasks: Max number of recurrent tasks to select (default 10)
 
     Returns:
@@ -67,6 +71,7 @@ def generate_planning_auto(
 
     from backend.planning_engine.data_loader import (
         load_pomodoro_tasks,
+        load_respiration_tasks,
         load_recurrent_tasks,
         load_planned_tasks,
         load_temps_morts,
@@ -85,7 +90,24 @@ def generate_planning_auto(
     if len(selected_pomodoro) == 0:
         logger.warning("No Pomodoro tasks selected, planning will be empty")
 
-    # All active recurrent tasks
+    # 🆕 Load respiration tasks for pause alternance
+    if respiration_ids:
+        logger.info(f"🔍 DEBUG: Loading respiration tasks for IDs: {respiration_ids}")
+        all_respiration = load_respiration_tasks(data_dir / 'TACHES_RESPIRATOIRES.v2.csv')
+        # Build list with duplicates preserved (respiration_ids can contain duplicates)
+        selected_respiration = []
+        for resp_id in respiration_ids:
+            matching_task = next((t for t in all_respiration if t['id'] == resp_id), None)
+            if matching_task:
+                selected_respiration.append(matching_task)
+            else:
+                logger.warning(f"Respiration task ID {resp_id} not found in CSV, skipping")
+        logger.info(f"🔍 DEBUG: Selected {len(selected_respiration)} respiration tasks (with duplicates): {[t['id'] + ':' + t['name'] for t in selected_respiration]}")
+    else:
+        logger.info("🔍 DEBUG: No respiration_ids provided, will use recurrent tasks for alternance")
+        selected_respiration = []
+
+    # Load recurrent tasks for fallback (if no respirations provided)
     all_recurrent = load_recurrent_tasks(data_dir / 'TACHES_RECURRENTES.v2.csv', active_only=True)
 
     # Planned tasks (fixed time) for this date
@@ -94,11 +116,11 @@ def generate_planning_auto(
     # Temps morts (blocked slots) for this date
     temps_morts = load_temps_morts(data_dir / 'temps_morts.csv', date)
 
-    # History for scoring (🆕)
+    # History for scoring (🆕 only needed if using recurrent tasks)
     planning_history = load_planning_history(data_dir / 'planning_placements_history.csv')
     done_history = load_done_history(data_dir / 'done_v2.csv')
 
-    logger.info(f"Loaded: {len(selected_pomodoro)} Pomodoro, {len(all_recurrent)} recurrent, {len(planned_tasks)} planned, {len(temps_morts)} temps_morts")
+    logger.info(f"Loaded: {len(selected_pomodoro)} Pomodoro, {len(selected_respiration)} respiration, {len(all_recurrent)} recurrent, {len(planned_tasks)} planned, {len(temps_morts)} temps_morts")
 
     # ========================================================================
     # STEP 2: Calculate Free Time Slots
@@ -122,24 +144,37 @@ def generate_planning_auto(
         }
 
     # ========================================================================
-    # STEP 3: Score Recurrent Tasks (🆕 Intelligent Selection)
+    # STEP 3: Decide Alternance Strategy (🆕 Respiration vs Recurrent)
     # ========================================================================
-    from backend.planning_engine.smart_scorer import score_all_recurrent_tasks
+    # If respiration_ids provided → use respirations for alternance
+    # Otherwise → score recurrent tasks and use top N
 
-    scored_tasks = score_all_recurrent_tasks(all_recurrent, date, planning_history, done_history)
+    if selected_respiration:
+        logger.info("🔍 DEBUG: Using manually selected respiration tasks for alternance")
+        pause_tasks = selected_respiration
+        recurrent_task_scores = []  # No scoring needed
+    else:
+        logger.info("🔍 DEBUG: No respiration tasks provided, using intelligent recurrent task selection")
+        from backend.planning_engine.smart_scorer import score_all_recurrent_tasks
 
-    # Select top N
-    top_scored = scored_tasks[:max_recurrent_tasks]
-    selected_recurrent = [st['task'] for st in top_scored]
+        scored_tasks = score_all_recurrent_tasks(all_recurrent, date, planning_history, done_history)
 
-    logger.info(f"Selected top {len(selected_recurrent)} recurrent tasks (scores: {[st['score'] for st in top_scored]})")
+        # Select top N
+        top_scored = scored_tasks[:max_recurrent_tasks]
+        pause_tasks = [st['task'] for st in top_scored]
+        recurrent_task_scores = [
+            {'task_id': st['task']['id'], 'task_name': st['task']['name'], 'score': st['score']}
+            for st in top_scored
+        ]
+
+        logger.info(f"Selected top {len(pause_tasks)} recurrent tasks (scores: {[st['score'] for st in top_scored]})")
 
     # ========================================================================
     # STEP 4: Generate Base Planning (Alternation)
     # ========================================================================
     # Support multi-day: continue on next day if needed
     planning = _generate_multiday_planning(
-        selected_pomodoro, selected_recurrent, free_slots, date,
+        selected_pomodoro, pause_tasks, free_slots, date,
         data_dir, temps_morts, max_days=2
     )
 
@@ -193,10 +228,7 @@ def generate_planning_auto(
         'date': date,
         'planning': planning,
         'stats': stats,
-        'recurrent_task_scores': [
-            {'task_id': st['task']['id'], 'task_name': st['task']['name'], 'score': st['score']}
-            for st in top_scored
-        ]
+        'recurrent_task_scores': recurrent_task_scores  # Already formatted in Step 3
     }
 
 
@@ -322,21 +354,25 @@ def _generate_multiday_planning(
 
 def _generate_base_planning(
     pomodoro_tasks: List[Dict],
-    recurrent_tasks: List[Dict],
+    pause_tasks: List[Dict],
     free_slots: List[Dict],
     date: str
 ) -> List[Dict]:
     """
-    Generate base planning with Pomodoro ↔ Recurrent alternation.
+    Generate base planning with Pomodoro ↔ Pause alternation.
 
     Args:
         pomodoro_tasks: Selected Pomodoro tasks
-        recurrent_tasks: Selected recurrent tasks (scored)
+        pause_tasks: Selected pause tasks (respiration or recurrent)
         free_slots: Available time slots
         date: Target date
 
     Returns:
         List of planning slots
+
+    Note:
+        pause_tasks can be respiration tasks (type='respiration') or recurrent tasks (type='recurrent').
+        The function detects the type by checking if the task has 'duration_min' field.
     """
     from backend.planning_engine.task_integrator import generate_slot_id, reset_slot_id_counter
 
@@ -344,7 +380,13 @@ def _generate_base_planning(
 
     planning = []
     slot_index = 0
-    recurrent_index = 0
+    pause_index = 0  # Renamed from recurrent_index
+
+    # Detect task type (respiration or recurrent) by checking for 'earliest_time' field
+    # Respiration tasks have 'earliest_time', 'latest_time', 'ideal_time' fields
+    # Recurrent tasks don't have these fields
+    pause_task_type = 'respiration' if (pause_tasks and 'earliest_time' in pause_tasks[0]) else 'recurrent'
+    logger.info(f"🔍 DEBUG: Pause task type detected: {pause_task_type}")
 
     # Sort Pomodoro by priority (1=High → 3=Low), then by deadline
     pomodoro_tasks_sorted = sorted(
@@ -354,6 +396,7 @@ def _generate_base_planning(
 
     logger.info(f"🔍 DEBUG: _generate_base_planning called with {len(pomodoro_tasks)} Pomodoro tasks")
     logger.info(f"🔍 DEBUG: After sorting: {[t['id'] + ':' + t['name'] for t in pomodoro_tasks_sorted]}")
+    logger.info(f"🔍 DEBUG: {len(pause_tasks)} pause tasks provided ({pause_task_type})")
     logger.info(f"🔍 DEBUG: Available free slots: {len(free_slots)}")
 
     # Track current time instead of relying on slot indices
@@ -434,8 +477,8 @@ def _generate_base_planning(
             })
             current_time = pomodoro_end
 
-            if not recurrent_tasks:
-                # No recurrent tasks, add default pause
+            if not pause_tasks:
+                # No pause tasks, add default 5-min pause
                 # Advance to next free slot if needed
                 current_time = advance_to_next_free_slot(current_time, 5)
                 if current_time is None:
@@ -461,38 +504,38 @@ def _generate_base_planning(
                 })
                 current_time = pause_end
             else:
-                # Cycle through recurrent tasks
-                recurrent_task = recurrent_tasks[recurrent_index % len(recurrent_tasks)]
-                recurrent_index += 1
+                # Cycle through pause tasks (respiration or recurrent)
+                pause_task = pause_tasks[pause_index % len(pause_tasks)]
+                pause_index += 1
 
-                recurrent_duration = recurrent_task['duration_min']
+                pause_duration = pause_task['duration_min']
 
                 # Advance to next free slot if needed
-                current_time = advance_to_next_free_slot(current_time, recurrent_duration)
+                current_time = advance_to_next_free_slot(current_time, pause_duration)
                 if current_time is None:
-                    logger.warning(f"🔍 DEBUG: No more free slots for recurrent task, stopping")
+                    logger.warning(f"🔍 DEBUG: No more free slots for pause task, stopping")
                     return planning
 
-                recurrent_end = current_time + timedelta(minutes=recurrent_duration)
+                pause_end = current_time + timedelta(minutes=pause_duration)
 
                 # Check if exceeds day bounds (23:59)
-                if recurrent_end > max_time:
-                    logger.warning(f"Recurrent task exceeds day bounds at {current_time.strftime('%H:%M')}, truncating")
+                if pause_end > max_time:
+                    logger.warning(f"Pause task exceeds day bounds at {current_time.strftime('%H:%M')}, truncating")
                     return planning
 
                 planning.append({
                     'id': generate_slot_id(),
                     'heure_debut': current_time.strftime('%H:%M'),
-                    'heure_fin': recurrent_end.strftime('%H:%M'),
-                    'type': 'recurrent',
-                    'task_id': recurrent_task['id'],
-                    'task_name': recurrent_task['name'],
-                    'category': recurrent_task.get('category', ''),
-                    'sub_category': recurrent_task.get('sub_category', ''),
-                    'duration_min': recurrent_duration,
+                    'heure_fin': pause_end.strftime('%H:%M'),
+                    'type': pause_task_type,  # 🆕 Use detected type ('respiration' or 'recurrent')
+                    'task_id': pause_task['id'],
+                    'task_name': pause_task['name'],
+                    'category': pause_task.get('category', ''),
+                    'sub_category': pause_task.get('sub_category', ''),
+                    'duration_min': pause_duration,
                     'date': current_time.strftime('%Y-%m-%d')
                 })
-                current_time = recurrent_end
+                current_time = pause_end
 
     return planning
 
