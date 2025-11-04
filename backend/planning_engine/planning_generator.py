@@ -32,7 +32,11 @@ def generate_planning_auto(
     data_dir: Path,
     start_time: Optional[str] = None,
     respiration_ids: Optional[List[str]] = None,
-    max_recurrent_tasks: int = 10
+    max_recurrent_tasks: int = 10,
+    enable_clopes: bool = False,
+    clopes_interval_min: int = 120,
+    enable_calins: bool = False,
+    allow_consecutive_pauses: bool = False
 ) -> Dict:
     """
     Generate daily planning with automatic recurrent task selection (🆕).
@@ -46,6 +50,10 @@ def generate_planning_auto(
         start_time: Planning start time HH:MM (optional, will calculate now+15min if not provided)
         respiration_ids: List of respiration task IDs (can contain duplicates, optional)
         max_recurrent_tasks: Max number of recurrent tasks to select (default 10)
+        enable_clopes: Enable cigarette breaks insertion (default False)
+        clopes_interval_min: Interval for clopes in minutes (default 120)
+        enable_calins: Enable câlins insertion (1 every 2 respirations, default False)
+        allow_consecutive_pauses: Allow consecutive pauses without Pomodoros (default False)
 
     Returns:
         {
@@ -170,15 +178,36 @@ def generate_planning_auto(
         logger.info(f"Selected top {len(pause_tasks)} recurrent tasks (scores: {[st['score'] for st in top_scored]})")
 
     # ========================================================================
+    # STEP 3.5: Log Advanced Options (Phase 4)
+    # ========================================================================
+    if enable_clopes or enable_calins or allow_consecutive_pauses:
+        logger.info(f"🔍 DEBUG: Advanced options enabled:")
+        if enable_clopes:
+            logger.info(f"  - Clopes: every {clopes_interval_min} minutes")
+        if enable_calins:
+            logger.info(f"  - Câlins: 1 every 2 respirations")
+        if allow_consecutive_pauses:
+            logger.info(f"  - Consecutive pauses: allowed")
+
+    # ========================================================================
     # STEP 4: Generate Base Planning (Alternation)
     # ========================================================================
     # Support multi-day: continue on next day if needed
     planning = _generate_multiday_planning(
         selected_pomodoro, pause_tasks, free_slots, date,
-        data_dir, temps_morts, max_days=2
+        data_dir, temps_morts, max_days=2,
+        enable_calins=enable_calins,
+        allow_consecutive_pauses=allow_consecutive_pauses
     )
 
     logger.info(f"Generated base planning with {len(planning)} slots")
+
+    # ========================================================================
+    # STEP 4.5: Insert Clopes (Phase 4)
+    # ========================================================================
+    if enable_clopes and planning:
+        planning = _insert_clopes(planning, clopes_interval_min, date)
+        logger.info(f"Inserted clopes (interval: {clopes_interval_min} min)")
 
     # ========================================================================
     # STEP 5: Integrate Planned Tasks (Fixed Time)
@@ -192,11 +221,15 @@ def generate_planning_auto(
         has_planned_tasks = True
 
     # ========================================================================
-    # STEP 6: Repair Alternation Violations
+    # STEP 6: Repair Alternation Violations (Phase 4: Optional)
     # ========================================================================
     from backend.planning_engine.task_integrator import repair_consecutive_work_tasks
 
-    planning = repair_consecutive_work_tasks(planning)
+    if not allow_consecutive_pauses:
+        planning = repair_consecutive_work_tasks(planning)
+        logger.info("Repaired consecutive work tasks (alternation enforced)")
+    else:
+        logger.info("Skipped alternation repair (allow_consecutive_pauses=True)")
 
     # ========================================================================
     # STEP 7: Recalculate Times (Skip temps_morts)
@@ -265,24 +298,28 @@ def _validate_inputs(date: str, pomodoro_ids: List[str]) -> None:
 
 def _generate_multiday_planning(
     pomodoro_tasks: List[Dict],
-    recurrent_tasks: List[Dict],
+    pause_tasks: List[Dict],
     free_slots: List[Dict],
     date: str,
     data_dir: Path,
     temps_morts: List[Dict],
-    max_days: int = 2
+    max_days: int = 2,
+    enable_calins: bool = False,
+    allow_consecutive_pauses: bool = False
 ) -> List[Dict]:
     """
     Generate planning across multiple days if needed.
 
     Args:
         pomodoro_tasks: Pomodoro tasks to place
-        recurrent_tasks: Recurrent tasks
+        pause_tasks: Pause tasks (respiration or recurrent)
         free_slots: Free slots for day 1
         date: Starting date (YYYY-MM-DD)
         data_dir: Data directory for loading temps_morts
         temps_morts: Temps morts for day 1
         max_days: Maximum number of days to generate (default 2)
+        enable_calins: Enable câlins insertion (Phase 4)
+        allow_consecutive_pauses: Allow consecutive pauses (Phase 4)
 
     Returns:
         Planning across multiple days
@@ -316,7 +353,11 @@ def _generate_multiday_planning(
                 logger.info(f"  - Last free slot: {free_slots[-1]['heure_debut']}-{free_slots[-1]['heure_fin']}")
 
         # Generate planning for this day
-        day_planning = _generate_base_planning(current_pomodoro, recurrent_tasks, free_slots, current_date)
+        day_planning = _generate_base_planning(
+            current_pomodoro, pause_tasks, free_slots, current_date,
+            enable_calins=enable_calins,
+            allow_consecutive_pauses=allow_consecutive_pauses
+        )
 
         all_planning.extend(day_planning)
         logger.info(f"Multi-day: Day {day_offset+1} generated {len(day_planning)} slots")
@@ -356,7 +397,9 @@ def _generate_base_planning(
     pomodoro_tasks: List[Dict],
     pause_tasks: List[Dict],
     free_slots: List[Dict],
-    date: str
+    date: str,
+    enable_calins: bool = False,
+    allow_consecutive_pauses: bool = False
 ) -> List[Dict]:
     """
     Generate base planning with Pomodoro ↔ Pause alternation.
@@ -366,6 +409,8 @@ def _generate_base_planning(
         pause_tasks: Selected pause tasks (respiration or recurrent)
         free_slots: Available time slots
         date: Target date
+        enable_calins: Insert 1 câlin every 2 respirations (Phase 4)
+        allow_consecutive_pauses: Allow multiple pauses without Pomodoros (Phase 4)
 
     Returns:
         List of planning slots
@@ -382,11 +427,15 @@ def _generate_base_planning(
     slot_index = 0
     pause_index = 0  # Renamed from recurrent_index
 
+    # 🆕 Phase 4: Track câlins (1 every 2 respirations)
+    respiration_count = 0  # Count respirations for câlin insertion
+
     # Detect task type (respiration or recurrent) by checking for 'earliest_time' field
     # Respiration tasks have 'earliest_time', 'latest_time', 'ideal_time' fields
     # Recurrent tasks don't have these fields
     pause_task_type = 'respiration' if (pause_tasks and 'earliest_time' in pause_tasks[0]) else 'recurrent'
     logger.info(f"🔍 DEBUG: Pause task type detected: {pause_task_type}")
+    logger.info(f"🔍 DEBUG: Phase 4 options - enable_calins: {enable_calins}, allow_consecutive_pauses: {allow_consecutive_pauses}")
 
     # Sort Pomodoro by priority (1=High → 3=Low), then by deadline
     pomodoro_tasks_sorted = sorted(
@@ -504,6 +553,44 @@ def _generate_base_planning(
                 })
                 current_time = pause_end
             else:
+                # 🆕 Phase 4: Check if we should insert a câlin instead
+                should_insert_calin = (
+                    enable_calins and
+                    pause_task_type == 'respiration' and
+                    respiration_count > 0 and
+                    respiration_count % 2 == 0  # Every 2 respirations
+                )
+
+                if should_insert_calin:
+                    # Insert câlin (10 min)
+                    calin_duration = 10
+
+                    # Advance to next free slot if needed
+                    current_time = advance_to_next_free_slot(current_time, calin_duration)
+                    if current_time is None:
+                        logger.warning(f"🔍 DEBUG: No more free slots for câlin, stopping")
+                        return planning
+
+                    calin_end = current_time + timedelta(minutes=calin_duration)
+
+                    # Check if exceeds day bounds (23:59)
+                    if calin_end > max_time:
+                        logger.warning(f"Câlin exceeds day bounds at {current_time.strftime('%H:%M')}, truncating")
+                        return planning
+
+                    planning.append({
+                        'id': generate_slot_id(),
+                        'heure_debut': current_time.strftime('%H:%M'),
+                        'heure_fin': calin_end.strftime('%H:%M'),
+                        'type': 'calin',
+                        'task_id': 'calin_auto',
+                        'task_name': 'Câlin',
+                        'duration_min': calin_duration,
+                        'date': current_time.strftime('%Y-%m-%d')
+                    })
+                    current_time = calin_end
+                    logger.info(f"🔍 DEBUG: Inserted câlin after {respiration_count} respirations")
+
                 # Cycle through pause tasks (respiration or recurrent)
                 pause_task = pause_tasks[pause_index % len(pause_tasks)]
                 pause_index += 1
@@ -537,6 +624,10 @@ def _generate_base_planning(
                 })
                 current_time = pause_end
 
+                # 🆕 Phase 4: Track respirations for câlin insertion
+                if pause_task_type == 'respiration':
+                    respiration_count += 1
+
     return planning
 
 
@@ -560,6 +651,66 @@ def _calculate_end_time(start_time: str, duration_min: int) -> str:
     except ValueError as e:
         logger.error(f"Invalid start_time format: {start_time}: {e}")
         raise
+
+
+def _insert_clopes(planning: List[Dict], interval_min: int, date: str) -> List[Dict]:
+    """
+    Insert clope (cigarette) breaks at regular intervals.
+
+    Args:
+        planning: Existing planning
+        interval_min: Interval in minutes for clope breaks
+        date: Target date
+
+    Returns:
+        Planning with clopes inserted
+
+    Algorithm:
+        1. Track cumulative duration (all tasks)
+        2. When cumulative >= interval_min, insert clope (5 min)
+        3. Reset counter after each clope
+    """
+    from datetime import datetime, timedelta
+    from backend.planning_engine.task_integrator import generate_slot_id
+
+    result = []
+    cumulative_minutes = 0
+    target_date_obj = datetime.strptime(date, "%Y-%m-%d").date()
+
+    for slot in planning:
+        # Add cumulative duration
+        cumulative_minutes += slot.get('duration_min', 0)
+
+        # Check if we need a clope
+        if cumulative_minutes >= interval_min:
+            # Insert clope before this slot
+            slot_start = datetime.combine(target_date_obj, datetime.strptime(slot['heure_debut'], "%H:%M").time())
+            clope_duration = 5
+
+            result.append({
+                'id': generate_slot_id(),
+                'heure_debut': slot['heure_debut'],
+                'heure_fin': (slot_start + timedelta(minutes=clope_duration)).strftime('%H:%M'),
+                'type': 'clope',
+                'task_id': 'clope_auto',
+                'task_name': 'Pause Cigarette',
+                'duration_min': clope_duration,
+                'date': date
+            })
+
+            # Reset counter
+            cumulative_minutes = 0
+
+            # Adjust current slot start time
+            new_start = slot_start + timedelta(minutes=clope_duration)
+            slot['heure_debut'] = new_start.strftime('%H:%M')
+            new_end = new_start + timedelta(minutes=slot.get('duration_min', 0))
+            slot['heure_fin'] = new_end.strftime('%H:%M')
+
+        result.append(slot)
+
+    logger.info(f"🔍 DEBUG: Inserted {len([s for s in result if s.get('type') == 'clope'])} clopes")
+    return result
 
 
 def _calculate_stats(planning: List[Dict]) -> Dict:

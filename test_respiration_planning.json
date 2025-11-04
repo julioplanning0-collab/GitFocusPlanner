@@ -1,0 +1,7 @@
+{
+  "date": "2025-11-05",
+  "start_time": "19:00",
+  "pomodoro_task_ids": ["1", "2"],
+  "respiration_task_ids": ["R010", "R011", "R010"],
+  "max_recurrent_tasks": 5
+}
