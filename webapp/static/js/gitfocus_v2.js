@@ -521,16 +521,16 @@ function renderPlanning(data) {
         document.getElementById('stat-pause').textContent = `${stats.pause_minutes || 0} min`;
     }
 
-    // Recurrent scores (transparency)
-    if (scores.length > 0) {
-        document.getElementById('recurrent-scores').style.display = 'block';
-        document.getElementById('scores-list').innerHTML = scores.map(s => `
-            <div class="score-item">
-                <span class="score-item-name">${s.task_name}</span>:
-                <span class="score-item-score">${s.score.toFixed(1)}/100</span>
-            </div>
-        `).join('');
-    }
+    // Recurrent scores (transparency) - HIDDEN (user request)
+    // if (scores.length > 0) {
+    //     document.getElementById('recurrent-scores').style.display = 'block';
+    //     document.getElementById('scores-list').innerHTML = scores.map(s => `
+    //         <div class="score-item">
+    //             <span class="score-item-name">${s.task_name}</span>:
+    //             <span class="score-item-score">${s.score.toFixed(1)}/100</span>
+    //         </div>
+    //     `).join('');
+    // }
 
     // Planning timeline
     const container = document.getElementById('planning-display');
