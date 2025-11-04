@@ -94,6 +94,12 @@ async function generatePlanning() {
     showLoading(true);
 
     try {
+        // Read advanced options (Phase 4)
+        const enableClopes = document.getElementById('enable-clopes')?.checked || false;
+        const clopesInterval = parseInt(document.getElementById('clopes-interval')?.value || '120');
+        const enableCalins = document.getElementById('enable-calins')?.checked || false;
+        const allowConsecutivePauses = document.getElementById('allow-consecutive-pauses')?.checked || false;
+
         const data = await apiCall('/planning/generate-auto', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -102,7 +108,12 @@ async function generatePlanning() {
                 start_time: state.planningStartTime, // 🆕 Heure de départ (now + 15min arrondi à 5)
                 pomodoro_task_ids: selectedIds,
                 respiration_task_ids: state.selectedRespirationIds, // 🆕 IDs respirations (peut contenir duplicatas)
-                max_recurrent_tasks: 10
+                max_recurrent_tasks: 10,
+                // 🆕 Phase 4: Advanced options
+                enable_clopes: enableClopes,
+                clopes_interval_min: clopesInterval,
+                enable_calins: enableCalins,
+                allow_consecutive_pauses: allowConsecutivePauses
             })
         });
 
@@ -745,6 +756,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.classList.remove('mobile-view-planning');
             }
         });
+    });
+
+    // Advanced options (Phase 4) - Toggle clopes interval input
+    document.getElementById('enable-clopes')?.addEventListener('change', (e) => {
+        const clopesOptions = document.getElementById('clopes-options');
+        if (clopesOptions) {
+            clopesOptions.style.display = e.target.checked ? 'block' : 'none';
+        }
     });
 
     // Initial load

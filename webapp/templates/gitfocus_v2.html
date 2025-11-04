@@ -84,6 +84,45 @@
                 </div>
             </section>
 
+            <!-- Advanced Options (Phase 4) -->
+            <section class="task-section">
+                <div class="section-header">
+                    <h3>⚙️ Options Avancées</h3>
+                </div>
+                <div class="options-grid">
+                    <!-- Clopes Option -->
+                    <div class="option-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enable-clopes" />
+                            <span>🚬 Pauses Cigarettes</span>
+                        </label>
+                        <div class="option-details" id="clopes-options" style="display: none;">
+                            <label for="clopes-interval">Intervalle (minutes):</label>
+                            <input type="number" id="clopes-interval" value="120" min="30" max="300" step="30" />
+                            <p class="option-hint">Insérer une pause cigarette tous les X minutes de travail/pauses</p>
+                        </div>
+                    </div>
+
+                    <!-- Calins Option -->
+                    <div class="option-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="enable-calins" />
+                            <span>🤗 Câlins (1 tous les 2 respirations)</span>
+                        </label>
+                        <p class="option-hint">Ajoute automatiquement des pauses câlins entre les respirations</p>
+                    </div>
+
+                    <!-- Pauses Consécutives Option -->
+                    <div class="option-item">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="allow-consecutive-pauses" />
+                            <span>🔄 Autoriser Pauses Consécutives</span>
+                        </label>
+                        <p class="option-hint">Permet plusieurs pauses sans Pomodoros entre elles</p>
+                    </div>
+                </div>
+            </section>
+
             <!-- Generate Button -->
             <div class="action-bar">
                 <button id="btn-generate" class="btn btn-primary btn-large">

@@ -175,7 +175,12 @@ def generate_planning_auto():
             "start_time": "18:30",  # 🆕 Optional (HH:MM format, will calculate if not provided)
             "pomodoro_task_ids": ["1", "2", "3"],
             "respiration_task_ids": ["R_001", "R_002", "R_001"],  # 🆕 Can contain duplicates
-            "max_recurrent_tasks": 10
+            "max_recurrent_tasks": 10,
+            # 🆕 Phase 4: Advanced options
+            "enable_clopes": false,  # Optional
+            "clopes_interval_min": 120,  # Optional (default 120)
+            "enable_calins": false,  # Optional
+            "allow_consecutive_pauses": false  # Optional
         }
 
     Response:
@@ -201,6 +206,12 @@ def generate_planning_auto():
         respiration_ids = data.get('respiration_task_ids', [])  # 🆕 Can contain duplicates
         max_recurrent = data.get('max_recurrent_tasks', 10)
 
+        # 🆕 Phase 4: Advanced options
+        enable_clopes = data.get('enable_clopes', False)
+        clopes_interval = data.get('clopes_interval_min', 120)
+        enable_calins = data.get('enable_calins', False)
+        allow_consecutive_pauses = data.get('allow_consecutive_pauses', False)
+
         if not date:
             return jsonify({'success': False, 'error': 'Missing date'}), 400
 
@@ -209,6 +220,7 @@ def generate_planning_auto():
         logger.info(f"🔍 DEBUG: Received {len(pomodoro_ids)} Pomodoro IDs: {pomodoro_ids}")
         logger.info(f"🔍 DEBUG: Received {len(respiration_ids)} Respiration IDs: {respiration_ids}")
         logger.info(f"🔍 DEBUG: max_recurrent_tasks: {max_recurrent}")
+        logger.info(f"🔍 DEBUG: Advanced options - clopes: {enable_clopes}, calins: {enable_calins}, consecutive: {allow_consecutive_pauses}")
 
         from backend.planning_engine.planning_generator import generate_planning_auto
 
@@ -218,7 +230,11 @@ def generate_planning_auto():
             pomodoro_ids=pomodoro_ids,
             respiration_ids=respiration_ids,
             data_dir=Config.DATA_DIR,
-            max_recurrent_tasks=max_recurrent
+            max_recurrent_tasks=max_recurrent,
+            enable_clopes=enable_clopes,
+            clopes_interval_min=clopes_interval,
+            enable_calins=enable_calins,
+            allow_consecutive_pauses=allow_consecutive_pauses
         )
 
         return jsonify({
