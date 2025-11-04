@@ -15,10 +15,13 @@
 
 const state = {
     currentDate: null,
+    planningStartTime: null, // Format: "HH:MM" - calculated as now + 15min rounded to 5
     pomodoroTasks: [],
+    respirationTasks: [], // Available respiration tasks
     recurrentTasks: [],
     currentPlanning: [],
-    selectedPomodoroIds: []
+    selectedPomodoroIds: [],
+    selectedRespirationIds: [] // Can contain duplicates (e.g., ["R_001", "R_001", "R_002"])
 };
 
 // ============================================================================
@@ -68,6 +71,18 @@ async function loadRecurrentTasks() {
     }
 }
 
+async function loadRespirationTasks() {
+    try {
+        const data = await apiCall('/tasks/respiration');
+        state.respirationTasks = data.tasks || [];
+        renderRespirationTasks();
+    } catch (error) {
+        console.error('Failed to load respiration tasks:', error);
+        state.respirationTasks = [];
+        renderRespirationTasks();
+    }
+}
+
 async function generatePlanning() {
     const selectedIds = state.selectedPomodoroIds;
 
@@ -84,7 +99,9 @@ async function generatePlanning() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 date: state.currentDate,
+                start_time: state.planningStartTime, // 🆕 Heure de départ (now + 15min arrondi à 5)
                 pomodoro_task_ids: selectedIds,
+                respiration_task_ids: state.selectedRespirationIds, // 🆕 IDs respirations (peut contenir duplicatas)
                 max_recurrent_tasks: 10
             })
         });
