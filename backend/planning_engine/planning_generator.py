@@ -135,7 +135,7 @@ def generate_planning_auto(
     # ========================================================================
     from backend.planning_engine.slot_calculator import calculate_free_slots
 
-    free_slots = calculate_free_slots(date, temps_morts)
+    free_slots = calculate_free_slots(date, temps_morts, start_time=start_time)
     logger.info(f"🔍 DEBUG: Found {len(free_slots)} free 30-min slots")
     if free_slots:
         logger.info(f"🔍 DEBUG: First free slot: {free_slots[0]['heure_debut']}")

@@ -16,7 +16,7 @@ from typing import List, Dict
 logger = logging.getLogger(__name__)
 
 
-def calculate_free_slots(date: str, temps_morts: List[Dict]) -> List[Dict]:
+def calculate_free_slots(date: str, temps_morts: List[Dict], start_time: str = None) -> List[Dict]:
     """
     Calculate free 30-minute slots for a specific date.
 
@@ -24,6 +24,9 @@ def calculate_free_slots(date: str, temps_morts: List[Dict]) -> List[Dict]:
         date: ISO date YYYY-MM-DD
         temps_morts: List of blocked time slots
                      Format: [{"heure_debut": "HH:MM", "heure_fin": "HH:MM"}, ...]
+        start_time: Optional manual start time (HH:MM). If not provided:
+                    - If date == today: current time + 15min (rounded to 5min)
+                    - Otherwise: 06:00
 
     Returns:
         List of free slots: [{"heure_debut": "HH:MM", "heure_fin": "HH:MM"}, ...]
@@ -63,10 +66,21 @@ def calculate_free_slots(date: str, temps_morts: List[Dict]) -> List[Dict]:
     # Find all "holes" (free periods) and fill them with 30-min slots
     free_slots = []
 
-    # Start from day_start (or current time if today)
+    # Start from day_start (or manual start_time, or current time if today)
     current = day_start
-    if target_date == today:
-        # Round up to next 15-min mark if planning for today
+
+    if start_time:
+        # 🆕 Manual start time provided - use it
+        try:
+            manual_time = datetime.strptime(start_time, "%H:%M").time()
+            current = datetime.combine(target_date, manual_time)
+            logger.info(f"Using manual start_time: {start_time}")
+        except ValueError as e:
+            logger.warning(f"Invalid start_time format '{start_time}', using default calculation: {e}")
+            start_time = None  # Fallback to auto-calculation
+
+    if not start_time and target_date == today:
+        # Auto-calculate: Round up to next 15-min mark if planning for today
         minutes = now.minute
         rounded_minutes = ((minutes // 15) + 1) * 15
         if rounded_minutes == 60:
