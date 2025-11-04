@@ -311,11 +311,7 @@ body {
 }
 
 .recurrent-scores {
-    background: #fef3c7;
-    border-left: 4px solid var(--color-warning);
-    padding: 15px;
-    border-radius: 6px;
-    margin-bottom: var(--spacing);
+    display: none;
 }
 
 .recurrent-scores h4 {
