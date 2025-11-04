@@ -713,12 +713,26 @@ document.addEventListener('DOMContentLoaded', () => {
     setTodayDate();
 
     // Calculate and set planning start time
-    state.planningStartTime = calculateStartTime();
+    const calculatedStartTime = calculateStartTime();
+    state.planningStartTime = calculatedStartTime;
+
+    // Initialize the time input with calculated value
+    const timeInput = document.getElementById('planning-start-time');
+    if (timeInput) {
+        timeInput.value = calculatedStartTime;
+    }
 
     // Date change
     document.getElementById('planning-date').addEventListener('change', (e) => {
         state.currentDate = e.target.value;
     });
+
+    // Start time change - user can manually adjust
+    if (timeInput) {
+        timeInput.addEventListener('change', (e) => {
+            state.planningStartTime = e.target.value;
+        });
+    }
 
     // Buttons
     document.getElementById('btn-today').addEventListener('click', setTodayDate);
