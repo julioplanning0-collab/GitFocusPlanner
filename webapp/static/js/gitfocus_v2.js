@@ -200,118 +200,8 @@ function renderRecurrentTasks() {
     document.getElementById('recurrent-count').textContent = `${state.recurrentTasks.length} tâches`;
 }
 
-function addRecurrentTaskToPlanning(taskId) {
-    // Check if planning exists
-    if (state.currentPlanning.length === 0) {
-        // No popup - silently return
-        return;
-    }
-
-    // Find the task
-    const task = state.recurrentTasks.find(t => t.id === taskId);
-    if (!task) {
-        // No popup - silently return
-        return;
-    }
-
-    // Find first default pause (5-min pause created by Pomodoro)
-    const firstPauseIndex = state.currentPlanning.findIndex(
-        slot => slot.type === 'pause' && slot.task_id === 'default_pause'
-    );
-
-    if (firstPauseIndex !== -1) {
-        // Replace the default pause with the recurrent task
-        const pauseStartTime = state.currentPlanning[firstPauseIndex].heure_debut;
-        const pauseStartDate = state.currentPlanning[firstPauseIndex].date;
-        const oldPauseDuration = state.currentPlanning[firstPauseIndex].duration_min;
-        const newTaskDuration = task.duration_min;
-
-        // Calculate end time (may cross midnight)
-        const endResult = addMinutes(pauseStartTime, newTaskDuration, pauseStartDate);
-        const endTime = typeof endResult === 'string' ? endResult : endResult.time;
-        const endDate = typeof endResult === 'string' ? pauseStartDate : endResult.date;
-
-        // Create new recurrent slot
-        const newSlot = {
-            id: `slot_${Date.now()}`,
-            heure_debut: pauseStartTime,
-            heure_fin: endTime,
-            type: 'recurrent',
-            task_id: task.id,
-            task_name: task.name,
-            category: task.category || '',
-            sub_category: task.sub_category || '',
-            duration_min: newTaskDuration,
-            date: pauseStartDate
-        };
-
-        // Replace the pause
-        state.currentPlanning[firstPauseIndex] = newSlot;
-
-        // If duration changed, recalculate all following slots' times
-        const timeDifference = newTaskDuration - oldPauseDuration;
-        if (timeDifference !== 0) {
-            let currentDate = endDate; // Start from the end date of the replaced slot
-            for (let i = firstPauseIndex + 1; i < state.currentPlanning.length; i++) {
-                const slot = state.currentPlanning[i];
-
-                // Recalculate start time
-                const startResult = addMinutes(slot.heure_debut, timeDifference, currentDate);
-                if (typeof startResult === 'string') {
-                    slot.heure_debut = startResult;
-                } else {
-                    slot.heure_debut = startResult.time;
-                    slot.date = startResult.date;
-                    currentDate = startResult.date;
-                }
-
-                // Recalculate end time
-                const endResult = addMinutes(slot.heure_fin, timeDifference, currentDate);
-                if (typeof endResult === 'string') {
-                    slot.heure_fin = endResult;
-                } else {
-                    slot.heure_fin = endResult.time;
-                    slot.date = endResult.date;
-                    currentDate = endResult.date;
-                }
-            }
-        }
-    } else {
-        // No default pause found, add to end (fallback behavior)
-        const lastSlot = state.currentPlanning[state.currentPlanning.length - 1];
-        const lastEndTime = lastSlot.heure_fin;
-        const lastEndDate = lastSlot.date;
-
-        // Calculate end time (may cross midnight)
-        const endResult = addMinutes(lastEndTime, task.duration_min, lastEndDate);
-        const endTime = typeof endResult === 'string' ? endResult : endResult.time;
-        const endDate = typeof endResult === 'string' ? lastEndDate : endResult.date;
-
-        const newSlot = {
-            id: `slot_${Date.now()}`,
-            heure_debut: lastEndTime,
-            heure_fin: endTime,
-            type: 'recurrent',
-            task_id: task.id,
-            task_name: task.name,
-            category: task.category || '',
-            sub_category: task.sub_category || '',
-            duration_min: task.duration_min,
-            date: lastEndDate
-        };
-
-        state.currentPlanning.push(newSlot);
-    }
-
-    // Re-render planning
-    renderPlanning({
-        planning: state.currentPlanning,
-        stats: calculateStats(state.currentPlanning),
-        recurrent_task_scores: []
-    });
-
-    // No popup - task added silently
-}
+// OBSOLETE: addRecurrentTaskToPlanning() - Now handled by backend
+// Recurrent tasks are integrated into planning generation on backend side
 
 // Helper functions for time manipulation
 function addMinutes(timeStr, minutes, currentDate = null) {
@@ -436,13 +326,12 @@ function handleDrop(e) {
     const newIndex = draggedSlotIndex < dropTargetIndex ? dropTargetIndex - 1 : dropTargetIndex;
     state.currentPlanning.splice(newIndex, 0, draggedSlot);
 
-    // Repair alternation violations
-    repairAlternationViolations();
+    // TODO: Call backend API to regenerate planning with reordered tasks
+    // For now, just re-render with optimistic update
+    // repairAlternationViolations(); // OBSOLETE - will be handled by backend
+    // recalculateTimesAfterReorder(); // OBSOLETE - will be handled by backend
 
-    // Recalculate times sequentially (respecting durations)
-    recalculateTimesAfterReorder();
-
-    // Re-render
+    // Re-render with current state (times may be incorrect until backend regenerates)
     renderPlanning({
         planning: state.currentPlanning,
         stats: calculateStats(state.currentPlanning),
@@ -450,114 +339,12 @@ function handleDrop(e) {
     });
 }
 
-function repairAlternationViolations() {
-    /**
-     * Scan planning and fix alternation violations.
-     * If two work tasks consecutive → insert pause between them
-     * If two pause tasks consecutive → remove one
-     */
-    const workTypes = new Set(['pomodoro', 'planned', 'recurrent']);
-    const pauseTypes = new Set(['respiration', 'pause']);
+// OBSOLETE: repairAlternationViolations() - Now handled by backend
+// Alternation is guaranteed by backend planning generation algorithm
 
-    let modified = true;
-    let iterations = 0;
-    const maxIterations = 50; // Safety limit
-
-    while (modified && iterations < maxIterations) {
-        modified = false;
-        iterations++;
-
-        for (let i = 0; i < state.currentPlanning.length - 1; i++) {
-            const current = state.currentPlanning[i];
-            const next = state.currentPlanning[i + 1];
-
-            const currentIsWork = workTypes.has(current.type);
-            const nextIsWork = workTypes.has(next.type);
-            const currentIsPause = pauseTypes.has(current.type);
-            const nextIsPause = pauseTypes.has(next.type);
-
-            // Violation: Two work tasks consecutive
-            if (currentIsWork && nextIsWork) {
-                // Find a pause to insert (prefer later in planning to minimize disruption)
-                let pauseToMove = null;
-                let pauseIndex = -1;
-
-                for (let j = i + 2; j < state.currentPlanning.length; j++) {
-                    if (pauseTypes.has(state.currentPlanning[j].type)) {
-                        pauseToMove = state.currentPlanning[j];
-                        pauseIndex = j;
-                        break;
-                    }
-                }
-
-                if (pauseToMove) {
-                    // Move pause between the two work tasks
-                    state.currentPlanning.splice(pauseIndex, 1);
-                    state.currentPlanning.splice(i + 1, 0, pauseToMove);
-                    modified = true;
-                    break; // Restart scan
-                } else {
-                    // No pause available, create default pause
-                    const defaultPause = {
-                        id: `pause_${Date.now()}`,
-                        type: 'pause',
-                        task_id: 'default_pause',
-                        task_name: 'Pause',
-                        duration_min: 5,
-                        heure_debut: '',
-                        heure_fin: '',
-                        date: current.date
-                    };
-                    state.currentPlanning.splice(i + 1, 0, defaultPause);
-                    modified = true;
-                    break;
-                }
-            }
-
-            // Violation: Two pause tasks consecutive (remove second)
-            if (currentIsPause && nextIsPause) {
-                state.currentPlanning.splice(i + 1, 1);
-                modified = true;
-                break;
-            }
-        }
-    }
-
-    if (iterations >= maxIterations) {
-        console.warn(`Repair hit max iterations (${maxIterations}), may still have violations`);
-    }
-}
-
-function recalculateTimesAfterReorder() {
-    /**
-     * Recalculate all slot times after reordering.
-     * Uses first slot's start time as reference.
-     * Does NOT respect temps_morts (would need API call for that).
-     */
-    if (state.currentPlanning.length === 0) return;
-
-    let currentTime = state.currentPlanning[0].heure_debut;
-    let currentDate = state.currentPlanning[0].date;
-
-    for (let i = 0; i < state.currentPlanning.length; i++) {
-        const slot = state.currentPlanning[i];
-        const duration = slot.duration_min;
-
-        // Calculate end time
-        const endResult = addMinutes(currentTime, duration, currentDate);
-        const endTime = typeof endResult === 'string' ? endResult : endResult.time;
-        const endDate = typeof endResult === 'string' ? currentDate : endResult.date;
-
-        // Update slot
-        slot.heure_debut = currentTime;
-        slot.heure_fin = endTime;
-        slot.date = currentDate;
-
-        // Move to next slot
-        currentTime = endTime;
-        currentDate = endDate;
-    }
-}
+// OBSOLETE: recalculateTimesAfterReorder() - Now handled by backend
+// Backend returns planning with absolute times already calculated
+// For drag&drop reordering, will need to call backend API to regenerate
 
 function handleDragEnd(e) {
     e.currentTarget.classList.remove('dragging');
@@ -632,10 +419,10 @@ function handleDeleteSlot(e) {
         gapIndex += 2;
     }
 
-    // Recalculate all times to ensure continuity
-    recalculateTimesAfterReorder();
+    // TODO: Call backend API to regenerate planning after deletion
+    // recalculateTimesAfterReorder(); // OBSOLETE - will be handled by backend
 
-    // Re-render
+    // Re-render with current state (times may be incorrect until backend regenerates)
     renderPlanning({
         planning: state.currentPlanning,
         stats: calculateStats(state.currentPlanning),
