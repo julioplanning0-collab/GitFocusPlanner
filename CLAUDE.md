@@ -96,6 +96,57 @@
 - **Rafraîchissement automatique**: Les dropdowns se mettent à jour après chaque ajout
 - **Cohérence garantie**: Même liste pour tâches Pomodoro, Respiratoires et Récurrentes
 
+### Options Avancées (Phase 4)
+**Section dédiée avec 3 nouvelles fonctionnalités optionnelles:**
+
+#### 1. Pauses Cigarettes (Clopes) 🚬
+- **Activation**: Checkbox "Pauses Cigarettes" + input intervalle (défaut: 120 min)
+- **Comportement**: Insère automatiquement une pause cigarette (5 min) tous les X minutes
+- **Comptage**: Suit la durée cumulée de TOUS les slots (Pomodoros + Respirations + Câlins)
+- **Backend**: Fonction `_insert_clopes()` dans `planning_generator.py:594-651`
+- **Logique**:
+  - Compteur cumulatif réinitialisé après chaque insertion
+  - Ajuste automatiquement les heures des slots suivants
+  - Type de slot: `'clope'`
+
+#### 2. Câlins 🤗
+- **Activation**: Checkbox "Câlins (1 tous les 2 respirations)"
+- **Comportement**: Insère automatiquement un câlin (10 min) tous les 2 respirations
+- **Comptage**: Compteur `respiration_count` incrémenté après chaque respiration
+- **Backend**: Logique intégrée dans `_generate_base_planning()` (lignes 552-588)
+- **Logique**:
+  - Vérification: `respiration_count % 2 == 0`
+  - Insertion AVANT la respiration (pas après)
+  - Type de slot: `'calin'`
+- **Cas d'usage**: Alternance travail/pause avec moments de détente réguliers
+
+#### 3. Pauses Consécutives 🔄
+- **Activation**: Checkbox "Autoriser Pauses Consécutives"
+- **Comportement**: Désactive l'alternance stricte Pomodoro/Pause
+- **Backend**: Appel conditionnel de `repair_consecutive_work_tasks()` (lignes 228-232)
+- **Logique**:
+  - Si `allow_consecutive_pauses=False` (défaut): Alternance stricte forcée
+  - Si `allow_consecutive_pauses=True`: Skip la réparation, permet Respiration → Respiration directement
+- **Cas d'usage**: Périodes de pause prolongées (plusieurs respirations consécutives)
+
+**Paramètres API** (`POST /api/v2/gitfocus/planning/generate-auto`):
+```json
+{
+  "enable_clopes": false,          // Boolean
+  "clopes_interval_min": 120,      // Number (30-300)
+  "enable_calins": false,          // Boolean
+  "allow_consecutive_pauses": false // Boolean
+}
+```
+
+**Types de slots générés**:
+- `'pomodoro'` - Tâche de travail (25 min)
+- `'respiration'` - Tâche respiratoire (durée variable)
+- `'clope'` - Pause cigarette automatique (5 min)
+- `'calin'` - Pause câlin automatique (10 min)
+- `'recurrent'` - Tâche récurrente
+- `'planned'` - Tâche planifiée (date/heure fixe)
+
 ## Démarrage
 
 ### Méthode recommandée
@@ -108,6 +159,58 @@ webapp\venv\Scripts\python.exe -m webapp.server
 Note: Le script `scripts\start.bat` peut s'arrêter après un certain temps. Préférer la méthode directe ci-dessus.
 
 ## Modifications récentes
+
+### 2025-11-04 - Phase 4: Options Avancées (Clopes, Câlins, Pauses Consécutives)
+**Nouvelle fonctionnalité majeure: 3 options avancées pour personnaliser le planning**
+
+**1. Pauses Cigarettes (Clopes)**
+- Interface:
+  - Checkbox "Pauses Cigarettes" avec input intervalle (défaut 120 min)
+  - Toggle automatique pour afficher/masquer l'input intervalle
+- Backend:
+  - Nouvelle fonction `_insert_clopes()` (planning_generator.py:594-651)
+  - Suit la durée cumulée de TOUS les slots (Pomodoros + Respirations + Câlins)
+  - Insère pause cigarette (5 min) tous les X minutes (configurable: 30-300 min)
+  - Ajuste automatiquement les heures des slots suivants
+  - Type de slot: `'clope'`
+
+**2. Câlins**
+- Interface:
+  - Checkbox "Câlins (1 tous les 2 respirations)"
+- Backend:
+  - Logique intégrée dans `_generate_base_planning()` (lignes 552-588)
+  - Compteur `respiration_count` incrémenté après chaque respiration
+  - Insertion d'un câlin (10 min) AVANT chaque 2ème respiration
+  - Type de slot: `'calin'`
+
+**3. Pauses Consécutives**
+- Interface:
+  - Checkbox "Autoriser Pauses Consécutives"
+- Backend:
+  - Modification de STEP 6 dans `generate_planning_auto()` (lignes 228-232)
+  - Appel conditionnel de `repair_consecutive_work_tasks()`
+  - Si activé: Skip la réparation, permet plusieurs pauses consécutives sans Pomodoros
+
+**Paramètres API ajoutés**:
+- `enable_clopes` (boolean, défaut: false)
+- `clopes_interval_min` (number, défaut: 120, range: 30-300)
+- `enable_calins` (boolean, défaut: false)
+- `allow_consecutive_pauses` (boolean, défaut: false)
+
+**Fichiers modifiés**:
+- Frontend: `gitfocus_v2.html`, `gitfocus_v2.js`
+- API: `routes_gitfocus_v2.py`
+- Backend: `planning_generator.py` (3 fonctions modifiées, 1 nouvelle fonction)
+
+**Commits**:
+- `269bb7c` - Frontend et API
+- `ac03199` - Backend complet
+- `a6054a7` - Documentation
+
+**Cas d'usage**:
+- Clopes: Fumeurs réguliers qui ont besoin de pauses cigarettes à intervalles fixes
+- Câlins: Alternance travail/pause avec moments de détente réguliers
+- Pauses consécutives: Périodes de pause prolongées (méditation, exercices, etc.)
 
 ### 2025-10-30 - Fix critique: Calcul de créneaux et génération de planning
 **Correction de 2 bugs majeurs empêchant l'utilisation de tout le temps disponible:**
