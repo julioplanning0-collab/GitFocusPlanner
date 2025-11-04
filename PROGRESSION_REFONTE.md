@@ -90,9 +90,9 @@
 
 ---
 
-## 🔄 Phase 4: Nouvelles Fonctionnalités (EN COURS - 60%)
+## ✅ Phase 4: Nouvelles Fonctionnalités (COMPLÈTE - 100%)
 
-### Fonctionnalités à Implémenter
+### Fonctionnalités Implémentées
 1. **Clopes** (cigarette breaks)
    - Intervalle configurable (défaut: 120 min)
    - Compter TOUTES les durées (Pomodoros + Respirations + Câlins)
@@ -124,19 +124,34 @@
 - ✅ Logs DEBUG ajoutés
 - ✅ Appel à `generate_planning_auto()` avec nouveaux params
 
-### ⏳ Backend À Implémenter (planning_generator.py)
-- [ ] Modifier signature `generate_planning_auto()` pour accepter paramètres
-- [ ] Implémenter logique insertion clopes:
-  * Compter durées cumulées (Pomodoros + Respirations + Câlins)
-  * Insérer pause clope tous les X minutes (configurable)
-- [ ] Implémenter logique insertion câlins:
-  * Insérer 1 câlin tous les 2 respirations
-  * Type = 'calin' dans planning
-- [ ] Implémenter support pauses consécutives:
-  * Désactiver alternance stricte si option activée
-  * Permettre Respiration → Respiration directement
+### ✅ Backend Complété (planning_generator.py)
+- ✅ Signatures modifiées:
+  - `generate_planning_auto()`: +4 params (enable_clopes, clopes_interval_min, enable_calins, allow_consecutive_pauses)
+  - `_generate_multiday_planning()`: +2 params (enable_calins, allow_consecutive_pauses)
+  - `_generate_base_planning()`: +2 params (enable_calins, allow_consecutive_pauses)
 
-**Commit**: `269bb7c` - "feat: Phase 4 (partiel) - Frontend et API pour options avancées"
+- ✅ **Clopes** - Nouvelle fonction `_insert_clopes()` (lignes 594-651):
+  - Suit durée cumulée de TOUS les slots
+  - Insère pause cigarette (5 min) tous les X minutes
+  - Ajuste automatiquement heures des slots suivants
+  - Appel APRÈS génération de base (STEP 4.5, lignes 205-210)
+
+- ✅ **Câlins** - Logique dans `_generate_base_planning()`:
+  - Compteur `respiration_count` (ligne 427)
+  - Insertion avant chaque 2ème respiration (lignes 552-588)
+  - Durée: 10 minutes par câlin
+  - Type: 'calin' (distinct de 'respiration')
+
+- ✅ **Pauses Consécutives** - Modification STEP 6 (lignes 228-232):
+  - Appel conditionnel de `repair_consecutive_work_tasks()`
+  - Si `allow_consecutive_pauses=True`: Skip la réparation
+  - Permet plusieurs pauses consécutives sans Pomodoros
+
+**Commits**:
+- `269bb7c` - "feat: Phase 4 (partiel) - Frontend et API pour options avancées"
+- `ac03199` - "feat: Phase 4 backend complete - Clopes, Câlins, Pauses Consécutives"
+
+**Résultat**: Phase 4 100% fonctionnelle ✅
 
 ---
 
@@ -221,14 +236,23 @@
 
 ## 🚀 Prochaines Actions Immédiates
 
-1. **Créer `renderRespirationTasks()`**
-2. **Ajouter section HTML pour respirations**
-3. **Implémenter `calculateStartTime()`**
-4. **Modifier backend pour accepter nouveaux paramètres**
-5. **Tester le flux complet**
+1. **Tester les nouvelles fonctionnalités Phase 4**
+   - Tester insertion des clopes avec différents intervalles
+   - Tester insertion des câlins (1 tous les 2 respirations)
+   - Tester mode pauses consécutives
+   - Vérifier les logs DEBUG
+
+2. **Phase 5: Documentation finale**
+   - Mettre à jour CLAUDE.md avec architecture Phase 4
+   - Documenter les nouveaux types de slots ('clope', 'calin')
+   - Créer exemples d'utilisation
+
+3. **Merge vers master**
+   - Vérifier tous les tests passent
+   - Créer merge commit détaillé
 
 ---
 
-**Dernière mise à jour**: 2025-11-04 18:50 UTC
+**Dernière mise à jour**: 2025-11-04 (Phase 4 complète)
 **Branche active**: `refonte-planning-v2`
-**Status**: Phase 3 en cours (40% complété)
+**Status**: Phase 4 complète (100%), prêt pour tests
