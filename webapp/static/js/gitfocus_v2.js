@@ -737,9 +737,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // Buttons
     document.getElementById('btn-today').addEventListener('click', setTodayDate);
     document.getElementById('btn-refresh').addEventListener('click', () => {
+        // Reload task lists
         loadPomodoroTasks();
         loadRespirationTasks();
         loadRecurrentTasks();
+
+        // If a planning has been generated, regenerate it with current settings
+        if (state.currentPlanning.length > 0 && state.selectedPomodoroIds.length > 0) {
+            console.log('Regenerating planning with updated start time:', state.planningStartTime);
+            generatePlanning();
+        }
     });
     document.getElementById('btn-generate').addEventListener('click', generatePlanning);
     document.getElementById('btn-export').addEventListener('click', exportPlanning);
