@@ -217,6 +217,52 @@ function renderRecurrentTasks() {
     document.getElementById('recurrent-count').textContent = `${state.recurrentTasks.length} tâches`;
 }
 
+function renderRespirationTasks() {
+    const container = document.getElementById('respiration-task-list');
+
+    if (state.respirationTasks.length === 0) {
+        container.innerHTML = '<div class="empty-state"><p>Aucune tâche respiratoire disponible</p></div>';
+        return;
+    }
+
+    container.innerHTML = state.respirationTasks.map(task => {
+        // Count how many times this task is selected
+        const selectionCount = state.selectedRespirationIds.filter(id => id === task.id).length;
+        const countBadge = selectionCount > 0 ? `<span class="selection-count">x${selectionCount}</span>` : '';
+
+        const metaInfo = `${task.category} › ${task.sub_category}${task.export_count ? ` • 📊 ${task.export_count} exports` : ''}`;
+        const description = task.description || '';
+
+        return `
+            <div class="task-item clickable ${selectionCount > 0 ? 'selected' : ''}"
+                 onclick="toggleRespirationSelection('${task.id}')"
+                 title="Cliquez pour ajouter au planning (permet duplicatas)">
+                <div class="task-item-header">
+                    <span class="task-item-icon">🟢</span>
+                    <span class="task-item-name">${task.name}</span>
+                    <span class="task-item-duration">${task.duration_min} min</span>
+                    ${countBadge}
+                </div>
+                <div class="task-item-details">${metaInfo}${description ? ` • ${description}` : ''}</div>
+            </div>
+        `;
+    }).join('');
+
+    const totalSelected = state.selectedRespirationIds.length;
+    const uniqueSelected = new Set(state.selectedRespirationIds).size;
+    const countText = totalSelected > 0
+        ? `${uniqueSelected} tâches (${totalSelected} sélections)`
+        : `${state.respirationTasks.length} tâches`;
+
+    document.getElementById('respiration-count').textContent = countText;
+}
+
+function toggleRespirationSelection(taskId) {
+    // Add to selection (allows duplicates)
+    state.selectedRespirationIds.push(taskId);
+    renderRespirationTasks();
+}
+
 // OBSOLETE: addRecurrentTaskToPlanning() - Now handled by backend
 // Recurrent tasks are integrated into planning generation on backend side
 
@@ -618,6 +664,35 @@ function closeStatsModal() {
     document.getElementById('stats-modal').style.display = 'none';
 }
 
+function calculateStartTime() {
+    /**
+     * Calculate planning start time: now + 15 minutes, rounded up to nearest 5 minutes.
+     *
+     * Returns: HH:MM format string
+     */
+    const now = new Date();
+
+    // Add 15 minutes
+    now.setMinutes(now.getMinutes() + 15);
+
+    // Round up to nearest 5 minutes
+    const minutes = now.getMinutes();
+    const roundedMinutes = Math.ceil(minutes / 5) * 5;
+
+    // Handle overflow (e.g., 58 -> 60 -> 00 next hour)
+    if (roundedMinutes >= 60) {
+        now.setHours(now.getHours() + 1);
+        now.setMinutes(0);
+    } else {
+        now.setMinutes(roundedMinutes);
+    }
+
+    const hours = String(now.getHours()).padStart(2, '0');
+    const mins = String(now.getMinutes()).padStart(2, '0');
+
+    return `${hours}:${mins}`;
+}
+
 // ============================================================================
 // EVENT LISTENERS
 // ============================================================================
@@ -625,6 +700,9 @@ function closeStatsModal() {
 document.addEventListener('DOMContentLoaded', () => {
     // Set today's date
     setTodayDate();
+
+    // Calculate and set planning start time
+    state.planningStartTime = calculateStartTime();
 
     // Date change
     document.getElementById('planning-date').addEventListener('change', (e) => {
@@ -635,6 +713,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-today').addEventListener('click', setTodayDate);
     document.getElementById('btn-refresh').addEventListener('click', () => {
         loadPomodoroTasks();
+        loadRespirationTasks();
         loadRecurrentTasks();
     });
     document.getElementById('btn-generate').addEventListener('click', generatePlanning);
@@ -670,6 +749,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial load
     loadPomodoroTasks();
+    loadRespirationTasks();
     loadRecurrentTasks();
 
     console.log('GitFocus Planner V2 initialized ✅');
