@@ -1,10 +1,11 @@
 # ============================================================
-# GitFocus Planner V2 - Script de Demarrage PowerShell
+# GitFocus Planner - Script de Demarrage PowerShell
+# Versions: V2 (existante) + V3 (en developpement)
 # ============================================================
 
 Write-Host ""
 Write-Host "============================================================" -ForegroundColor Cyan
-Write-Host " GitFocus Planner V2 - Demarrage du Serveur" -ForegroundColor Cyan
+Write-Host " GitFocus Planner - Demarrage du Serveur" -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -28,16 +29,22 @@ try {
     exit 1
 }
 
-# [2/5] Verifier les fichiers CSV requis
-Write-Host "[2/5] Verification fichiers CSV..." -ForegroundColor Yellow
+# [2/5] Verifier repertoire des donnees
+Write-Host "[2/5] Verification repertoire donnees..." -ForegroundColor Yellow
+$dataDir = "C:\Users\juli0\AndroidStudioProjects\GitFocus_2\prod_data"
+
+if (-not (Test-Path $dataDir)) {
+    Write-Host "[ERREUR] Repertoire prod_data absent: $dataDir" -ForegroundColor Red
+    Write-Host "Verifiez que le repertoire existe" -ForegroundColor Yellow
+    Read-Host "Appuyez sur Entree pour quitter"
+    exit 1
+}
+
+# Verifier fichiers CSV critiques
 $requiredFiles = @(
-    "prod_data\LISTE_MERE.v2.csv",
-    "prod_data\TACHES_RECURRENTES.v2.csv",
-    "prod_data\TACHES_RESPIRATOIRES.v2.csv",
-    "prod_data\TACHES_PLANIFIEES.v2.csv",
-    "prod_data\temps_morts.csv",
-    "prod_data\categories.csv",
-    "prod_data\done_v2.csv"
+    "$dataDir\LISTE_MERE.v2.csv",
+    "$dataDir\TACHES_RECURRENTES.v2.csv",
+    "$dataDir\temps_morts.csv"
 )
 
 $missingFiles = @()
@@ -48,14 +55,14 @@ foreach ($file in $requiredFiles) {
 }
 
 if ($missingFiles.Count -gt 0) {
-    Write-Host "[ERREUR] Fichiers manquants:" -ForegroundColor Red
+    Write-Host "[ERREUR] Fichiers critiques manquants:" -ForegroundColor Red
     foreach ($file in $missingFiles) {
         Write-Host "  - $file" -ForegroundColor Red
     }
     Read-Host "Appuyez sur Entree pour quitter"
     exit 1
 }
-Write-Host "       OK - Tous les fichiers presents" -ForegroundColor Green
+Write-Host "       OK - Fichiers critiques presents" -ForegroundColor Green
 
 # [3/5] Arreter TOUS les processus Python existants
 Write-Host "[3/5] Arret processus Python existants..." -ForegroundColor Yellow
@@ -105,9 +112,11 @@ Write-Host " SERVEUR EN COURS DE DEMARRAGE..." -ForegroundColor Cyan
 Write-Host "============================================================" -ForegroundColor Cyan
 Write-Host ""
 Write-Host " URLs d'acces:" -ForegroundColor White
-Write-Host "   Interface Web: " -NoNewline -ForegroundColor White
-Write-Host "http://localhost:5000/api/v2/gitfocus/interface" -ForegroundColor Green
-Write-Host "   Health Check:  " -NoNewline -ForegroundColor White
+Write-Host "   Interface Web V2: " -NoNewline -ForegroundColor White
+Write-Host "http://localhost:5000/gitfocus-v2" -ForegroundColor Green
+Write-Host "   Interface Web V3: " -NoNewline -ForegroundColor White
+Write-Host "http://localhost:5000/gitfocus-v3" -ForegroundColor Cyan
+Write-Host "   Health Check:     " -NoNewline -ForegroundColor White
 Write-Host "http://localhost:5000/health" -ForegroundColor Green
 Write-Host ""
 Write-Host " Pour arreter: Ctrl+C dans cette fenetre" -ForegroundColor Yellow
@@ -140,18 +149,19 @@ Write-Host "============================================================" -Foreg
 Write-Host " SERVEUR DEMARRE" -ForegroundColor Green
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host " Interface web:" -ForegroundColor White
-Write-Host "   http://localhost:5000/api/v2/gitfocus/interface" -ForegroundColor Cyan
+Write-Host " Interfaces web:" -ForegroundColor White
+Write-Host "   V2: http://localhost:5000/gitfocus-v2" -ForegroundColor Green
+Write-Host "   V3: http://localhost:5000/gitfocus-v3" -ForegroundColor Cyan
 Write-Host ""
 Write-Host " PID Serveur: $($serverProcess.Id)" -ForegroundColor Gray
 Write-Host " Pour arreter: Ctrl+C ou fermez la fenetre du serveur" -ForegroundColor Yellow
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host ""
 
-# Ouvrir le navigateur automatiquement
+# Ouvrir le navigateur automatiquement (V2 par defaut)
 Write-Host "Ouverture du navigateur dans 3 secondes..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
-Start-Process "http://localhost:5000/api/v2/gitfocus/interface"
+Start-Process "http://localhost:5000/gitfocus-v2"
 
 Write-Host ""
 Write-Host "Appuyez sur une touche pour fermer cette fenetre..." -ForegroundColor Gray
