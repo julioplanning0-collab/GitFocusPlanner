@@ -79,16 +79,17 @@
 - ✅ Logique chargement tâches respiratoires:
   - Préserve duplicatas dans `respiration_ids`
   - Cycle à travers IDs fournis pour alternance
-- ✅ Détection automatique type de pause:
-  - Si `respiration_ids` fourni → type='respiration'
-  - Sinon → fallback vers recurrent tasks avec scoring
+- ✅ Mode de sélection des pauses:
+  - Si `respiration_ids` fourni → type='respiration' (alternance Pomodoro/Respiration)
+  - Sinon → **Mode Focus**: planning contient SEULEMENT Pomodoros (pas de pauses automatiques)
+  - **Note 2025-11-05**: Le fallback automatique vers recurrent tasks a été retiré suite à demande utilisateur (commit 4cd7b73)
 - ✅ Modification `_generate_base_planning()`:
   - Paramètre `recurrent_tasks` → `pause_tasks`
   - Détection automatique type (respiration vs recurrent)
 
 **Tests**:
 - ✅ Test avec respiration_ids → alternance Pomodoro/Respiration
-- ✅ Test sans respiration_ids → fallback vers recurrent tasks
+- ✅ Test sans respiration_ids → Mode Focus (SEULEMENT Pomodoros, pas de pauses)
 - ✅ Vérification duplicatas → même ID apparaît plusieurs fois
 - ✅ Vérification types → 'respiration' vs 'recurrent' vs 'pause'
 
@@ -329,6 +330,74 @@
 
 ---
 
-**Dernière mise à jour**: 2025-11-04
+## 📝 Changements Post-Refonte (2025-11-05)
+
+### Migration: Tâches Respiratoires → Tâches Récurrentes
+**Date**: 2025-11-05 | **Commit**: `8f2a995`
+
+**Objectif**: Simplifier l'architecture en fusionnant les deux types de tâches.
+
+**Actions**:
+- ✅ Migration de 9 tâches respiratoires (R010-R029) vers `TACHES_RECURRENTES.v2.csv`
+- ✅ Backup créé: `TACHES_RESPIRATOIRES.v2.csv.backup`
+- ✅ Fichier `TACHES_RESPIRATOIRES.v2.csv` supprimé
+- ✅ Script de migration: `migrate_respiration_to_recurrent.py`
+- ✅ Guide de refactoring: `MIGRATION_RESPIRATION_RECURRENT.md`
+
+**Résultat**: 97 tâches récurrentes (88 originales + 9 respiratoires migrées)
+
+**Note**: Le code backend n'a pas encore été refactorisé pour refléter cette fusion. Les tâches respiratoires continuent d'être chargées via l'API existante.
+
+### Interface: Système d'Onglets
+**Date**: 2025-11-05 | **Commit**: `59ac245`
+
+**Objectif**: Séparer visuellement les 3 types de tâches pour améliorer l'UX.
+
+**Modifications**:
+- ✅ Onglets: 🔴 Pomodoro | 🟢 Pauses | 🟣 Récurrentes
+- ✅ Affichage conditionnel du contenu (JavaScript)
+- ✅ Styles CSS pour onglets actifs/inactifs
+- ✅ Les tâches récurrentes ne sont visibles QUE dans leur onglet dédié
+
+**Avantages**:
+- Réduction du scroll vertical
+- Séparation claire des responsabilités
+- Interface plus organisée
+
+### Comportement: Désactivation Fallback Automatique
+**Date**: 2025-11-05 | **Commit**: `4cd7b73`
+
+**Objectif**: Donner à l'utilisateur le contrôle total sur les tâches planifiées.
+
+**Changement**:
+- **Avant**: Si aucune respiration sélectionnée → insertion automatique de recurrent tasks (scoring intelligent)
+- **Après**: Si aucune respiration sélectionnée → **Mode Focus** (SEULEMENT Pomodoros, pas de pauses)
+
+**Raison**: L'insertion automatique causait:
+1. Planning commençant à 06:45 au lieu de l'heure choisie par l'utilisateur
+2. Ajout de tâches non demandées par l'utilisateur
+3. Comportement imprévisible
+
+**Impact**:
+- ✅ User a le contrôle total (sélection manuelle uniquement)
+- ✅ Planning respecte l'heure de départ choisie
+- ✅ Comportement prévisible et intuitif
+- ❌ Perte de la fonctionnalité d'alternance intelligente automatique
+
+**Recommandation future**: Si besoin de restaurer cette fonctionnalité, ajouter un paramètre `auto_insert_pauses: bool` dans l'API pour rendre le comportement configurable.
+
+### Améliorations Interface
+**Date**: 2025-11-05 | **Commits multiples**
+
+**Modifications**:
+- ✅ Input manuel pour heure de début (commit `7ff2d96`)
+- ✅ Cache busting automatique avec timestamp serveur (commit `037bffc`)
+- ✅ Badge version serveur visible en header (commit `5e5e5c4`)
+- ✅ Design compact des tâches du planning (commit `965020a`)
+- ✅ Suppression affichage scores récurrentes (commit `afe2887`)
+
+---
+
+**Dernière mise à jour**: 2025-11-05
 **Auteur**: Claude (Anthropic)
 **Supervision**: Julio
