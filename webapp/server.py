@@ -44,6 +44,10 @@ def create_app():
     from webapp.api.routes_gitfocus_v2 import gitfocus_bp
     app.register_blueprint(gitfocus_bp)
 
+    # Register V3 blueprint (clean URLs without version)
+    from webapp_v3.api.routes import planning_bp
+    app.register_blueprint(planning_bp)
+
     # Health check endpoint
     @app.route('/health')
     def health_check():

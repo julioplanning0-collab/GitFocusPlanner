@@ -9,7 +9,8 @@ from pathlib import Path
 from datetime import datetime
 
 from backend.planning_engine_v3.data_loader import (
-    load_pomodoro_tasks,
+    load_work_tasks,
+    load_pauses,
     load_recurrent_tasks,
     load_temps_morts
 )
@@ -26,8 +27,7 @@ planning_bp = Blueprint('planning', __name__, url_prefix='/api/planning')
 def get_pomodoro_tasks():
     try:
         data_dir = Path('prod_data')
-        csv_path = data_dir / 'LISTE_MERE.v2.csv'
-        tasks = load_pomodoro_tasks(csv_path)
+        tasks = load_work_tasks(data_dir)
         return jsonify({'success': True, 'data': tasks, 'count': len(tasks)})
     except Exception as e:
         logger.error(f"Erreur: {e}")
@@ -40,30 +40,29 @@ def generate_planning_endpoint():
         data = request.get_json()
         if not data:
             return jsonify({'success': False, 'error': 'Body JSON requis'}), 400
-        
+
         date = data.get('date')
         planning_start = data.get('planningStartTime')
-        
+
         if not date or not planning_start:
             return jsonify({'success': False, 'error': 'Champs requis manquants'}), 400
-        
+
         data_dir = Path('prod_data')
-        work_tasks = load_pomodoro_tasks(data_dir / 'LISTE_MERE.v2.csv')
-        all_recurrent = load_recurrent_tasks(data_dir / 'TACHES_RECURRENTES.v2.csv')
-        pauses = [t for t in all_recurrent if t.get('is_pause') == 1]
-        recurrent = [t for t in all_recurrent if t.get('is_pause') == 0]
-        temps_morts = load_temps_morts(data_dir / 'temps_morts.csv', date)
-        
+        work_tasks = load_work_tasks(data_dir)
+        pauses = load_pauses(data_dir, active_only=True)
+        recurrent_tasks = load_recurrent_tasks(data_dir, active_only=True)
+        temps_morts = load_temps_morts(data_dir, date)
+
         result = generate_planning(
             date=date,
             planningStartTime=planning_start,
             work_tasks=work_tasks,
             pauses=pauses,
-            recurrent_tasks=recurrent,
+            recurrent_tasks=recurrent_tasks,
             planned_tasks=[],
             temps_morts=temps_morts
         )
-        
+
         return jsonify({'success': True, 'data': result})
     except Exception as e:
         logger.error(f"Erreur: {e}")
