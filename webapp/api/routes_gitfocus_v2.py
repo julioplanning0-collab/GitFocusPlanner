@@ -485,4 +485,6 @@ def get_history_stats():
 @gitfocus_bp.route('/interface', methods=['GET'])
 def show_interface():
     """Render web interface."""
-    return render_template('gitfocus_v2.html', server_version=SERVER_START_TIME)
+    return render_template('gitfocus_v2.html',
+                          server_version=SERVER_START_TIME,
+                          cache_bust=SERVER_START_TIME)
