@@ -160,6 +160,71 @@ Note: Le script `scripts\start.bat` peut s'arrêter après un certain temps. Pr�
 
 ## Modifications récentes
 
+### 2025-11-05 - Migration CSV et Refonte Interface
+
+#### Migration: Tâches Respiratoires → Tâches Récurrentes
+**Objectif**: Simplifier l'architecture en fusionnant les deux types de tâches
+
+**Changements**:
+- ✅ 9 tâches respiratoires (R010-R029) migrées vers `TACHES_RECURRENTES.v2.csv`
+- ✅ Fichier `TACHES_RESPIRATOIRES.v2.csv` supprimé (backup créé)
+- ✅ Script de migration: `migrate_respiration_to_recurrent.py`
+- ✅ Total: 97 tâches récurrentes (88 originales + 9 migrées)
+
+**Note**: Le code backend n'a pas encore été refactorisé. L'API `/api/gitfocus/taches-respiratoires` continue de fonctionner en chargeant depuis le fichier récurrent.
+
+#### Interface: Système d'Onglets
+**Objectif**: Séparer visuellement les 3 types de tâches
+
+**Changements**:
+- ✅ Onglets: 🔴 Pomodoro | 🟢 Pauses | 🟣 Récurrentes
+- ✅ Affichage conditionnel du contenu (un seul onglet visible à la fois)
+- ✅ Les tâches récurrentes ne sont visibles QUE dans leur onglet dédié
+- ✅ Styles CSS pour onglets actifs/inactifs
+
+**Avantages**:
+- Réduction du scroll vertical
+- Séparation claire des types de tâches
+- Interface plus organisée
+
+#### Comportement: Mode Focus (Pas d'Insertion Automatique)
+**Objectif**: Donner à l'utilisateur le contrôle total
+
+**Changement critique** (commit 4cd7b73):
+- **Avant**: Si aucune respiration sélectionnée → insertion automatique de recurrent tasks (scoring intelligent)
+- **Après**: Si aucune respiration sélectionnée → **Mode Focus** (SEULEMENT Pomodoros, pas de pauses)
+
+**Raison**: L'insertion automatique causait:
+1. Planning commençant à 06:45 au lieu de l'heure choisie
+2. Ajout de tâches non demandées
+3. Comportement imprévisible
+
+**Impact**:
+- ✅ Contrôle total (sélection manuelle uniquement)
+- ✅ Planning respecte l'heure de départ choisie
+- ✅ Comportement prévisible
+- ❌ Perte de l'alternance intelligente automatique
+
+#### Améliorations Interface
+**Changements multiples**:
+- ✅ Input manuel pour heure de début (step=5 minutes)
+- ✅ Cache busting automatique avec timestamp serveur
+- ✅ Badge version serveur visible dans header (vert)
+- ✅ Design compact des tâches du planning (réduction padding/marges)
+- ✅ Suppression affichage scores récurrentes
+- ✅ Bouton refresh régénère le planning avec nouvelle heure
+
+**Commits**:
+- `7ff2d96` - Input heure manuelle
+- `037bffc` - Cache busting
+- `5e5e5c4` - Badge version serveur
+- `965020a` - Design compact
+- `afe2887` - Suppression scores
+- `627467a` - Bouton refresh
+- `4cd7b73` - Désactivation fallback automatique
+- `8f2a995` - Migration CSV
+- `59ac245` - Système d'onglets
+
 ### 2025-11-04 - Phase 4: Options Avancées (Clopes, Câlins, Pauses Consécutives)
 **Nouvelle fonctionnalité majeure: 3 options avancées pour personnaliser le planning**
 
