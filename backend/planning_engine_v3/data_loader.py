@@ -197,20 +197,15 @@ def load_recurrent_tasks(data_dir: Path, active_only: bool = False) -> List[Dict
             - last_done_date, next_due_date, is_active
 
     Filtres appliques:
-        - IS_PAUSE = 0 (taches recurrentes, pas pauses)
         - Si active_only=True: IS_ACTIVE = 1
     """
     csv_path = data_dir / "TACHES_RECURRENTES.v2.csv"
-    required_fields = ["ID", "NAME", "DURATION_MIN", "IS_PAUSE"]
+    required_fields = ["ID", "NAME", "DURATION_MIN"]
 
     rows = _read_csv(csv_path, required_fields)
 
     tasks = []
     for row in rows:
-        # Filtrer: seulement les taches recurrentes (pas pauses)
-        if row.get("IS_PAUSE") == "1":
-            continue
-
         # Filtrer: seulement actives si demande
         if active_only and row.get("IS_ACTIVE") != "1":
             continue
