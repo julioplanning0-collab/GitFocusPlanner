@@ -4,7 +4,7 @@ Routes SANS numero de version (clean URLs)
 """
 
 import logging
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, render_template, send_from_directory
 from pathlib import Path
 from datetime import datetime
 
@@ -21,6 +21,17 @@ logger = logging.getLogger(__name__)
 
 # Blueprint SANS numero de version
 planning_bp = Blueprint('planning', __name__, url_prefix='/api/planning')
+
+
+# ============================================================================
+# INTERFACE WEB
+# ============================================================================
+
+@planning_bp.route('/', methods=['GET'])
+@planning_bp.route('/interface', methods=['GET'])
+def serve_interface():
+    """Serve the V3 web interface."""
+    return render_template('index.html')
 
 
 @planning_bp.route('/tasks/pomodoro', methods=['GET'])
@@ -83,6 +94,17 @@ def export_planning():
         write_planning_csv(csv_path, timeline, date)
         
         return jsonify({'success': True, 'data': {'csv_path': str(csv_path), 'task_count': len(timeline)}})
+    except Exception as e:
+        logger.error(f"Erreur: {e}")
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+
+@planning_bp.route('/tasks/recurrent', methods=['GET'])
+def get_recurrent_tasks():
+    try:
+        data_dir = Path('prod_data')
+        tasks = load_recurrent_tasks(data_dir, active_only=True)
+        return jsonify({'success': True, 'data': tasks, 'count': len(tasks)})
     except Exception as e:
         logger.error(f"Erreur: {e}")
         return jsonify({'success': False, 'error': str(e)}), 500

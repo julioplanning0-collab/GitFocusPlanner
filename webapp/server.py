@@ -24,7 +24,9 @@ def create_app():
     Returns:
         Configured Flask app
     """
-    app = Flask(__name__)
+    app = Flask(__name__,
+                template_folder=str(project_root / 'webapp_v3' / 'templates'),
+                static_folder=str(project_root / 'webapp_v3' / 'static'))
 
     # Load configuration
     app.config.from_object(Config)

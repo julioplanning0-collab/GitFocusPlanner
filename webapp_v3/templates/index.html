@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitFocus Planner V3</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/gitfocus_v3.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <h1>🎯 GitFocus Planner V3</h1>
+            <p class="subtitle">Organiseur intelligent de tâches quotidiennes</p>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <nav class="tabs">
+            <button class="tab-button active" data-tab="planning">
+                📅 Planning
+            </button>
+            <button class="tab-button" data-tab="recurrent">
+                🔁 Tâches Récurrentes
+            </button>
+        </nav>
+
+        <!-- Tab Content: Planning -->
+        <div class="tab-content active" id="tab-planning">
+            <div class="planning-controls">
+                <div class="control-group">
+                    <label for="planning-date">Date:</label>
+                    <input type="date" id="planning-date" value="">
+                </div>
+                <div class="control-group">
+                    <label for="planning-start-time">Heure début:</label>
+                    <input type="time" id="planning-start-time" value="08:00">
+                </div>
+                <button class="btn btn-primary" id="btn-generate-planning">
+                    Générer Planning
+                </button>
+                <button class="btn btn-secondary" id="btn-export-planning">
+                    Exporter CSV
+                </button>
+            </div>
+
+            <div class="timeline-container" id="timeline-container">
+                <div class="empty-state">
+                    <p>Aucun planning généré</p>
+                    <p class="hint">Cliquez sur "Générer Planning" pour commencer</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab Content: Tâches Récurrentes -->
+        <div class="tab-content" id="tab-recurrent">
+            <div class="recurrent-layout">
+                <!-- Left Panel: Library -->
+                <div class="library-panel">
+                    <h2>📚 Bibliothèque</h2>
+                    <div class="library-actions">
+                        <button class="btn btn-small" id="btn-add-task">
+                            + Nouvelle tâche
+                        </button>
+                    </div>
+                    <div class="library-tree" id="library-tree">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Right Panel: Selected Tasks -->
+                <div class="selected-panel">
+                    <h2>✓ Tâches sélectionnées</h2>
+                    <div class="selected-count">
+                        <span id="selected-count">0</span> tâche(s)
+                    </div>
+                    <div class="selected-list" id="selected-list">
+                        <div class="empty-state-small">
+                            <p>Aucune tâche sélectionnée</p>
+                            <p class="hint">Cliquez sur une tâche dans la bibliothèque pour l'ajouter</p>
+                        </div>
+                    </div>
+                    <div class="selected-actions">
+                        <button class="btn btn-primary" id="btn-generate-from-recurrent">
+                            Générer Planning
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add/Edit Task -->
+    <div class="modal" id="modal-task">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Nouvelle tâche récurrente</h2>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="task-name">Nom *</label>
+                    <input type="text" id="task-name" placeholder="Ex: Douche matinale" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-duration">Durée (minutes) *</label>
+                    <input type="number" id="task-duration" min="1" value="15" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-category">Catégorie *</label>
+                    <input type="text" id="task-category" placeholder="Ex: Hygiène" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-subcategory">Sous-catégorie *</label>
+                    <input type="text" id="task-subcategory" placeholder="Ex: Matin" required>
+                </div>
+                <div class="form-group">
+                    <label for="task-description">Description</label>
+                    <textarea id="task-description" rows="3" placeholder="Optionnel"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="btn-cancel">Annuler</button>
+                <button class="btn btn-primary" id="btn-save-task">Enregistrer</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script src="{{ url_for('static', filename='js/gitfocus_v3.js') }}"></script>
+</body>
+</html>
