@@ -1,8 +1,25 @@
 # PLAN DE MIGRATION CLEAN - SUPPRESSION V2 ET CONSOLIDATION V3
 
-**Date**: 2025-11-05
+**Date création**: 2025-11-05
+**Date mise à jour**: 2025-11-05
 **Objectif**: Supprimer complètement la V2 et migrer tout le projet vers une architecture unique et propre
 **Principe**: UNE SEULE VERSION, UNE SEULE SOURCE DE VÉRITÉ
+
+## 📊 ÉTAT D'AVANCEMENT GLOBAL
+
+**Progression**: 3/8 étapes terminées (37%)
+
+- ✅ **ÉTAPE 1**: Backend V3 complet (49/53 tests passent)
+- ✅ **ÉTAPE 2**: API REST avec routes propres (sans numéro de version)
+- ✅ **ÉTAPE 3**: Interface web V3 (2 onglets: Planning + Tâches Récurrentes)
+- ⏸️ **ÉTAPE 4**: Tests end-to-end
+- ⏸️ **ÉTAPE 5**: Migration données production
+- ⏸️ **ÉTAPE 6**: Suppression code V2
+- ⏸️ **ÉTAPE 7**: Renommage _v3 → noms finaux
+- ⏸️ **ÉTAPE 8**: Tests finaux et déploiement
+
+**Commits réalisés**: 10
+**Temps total**: ~12 heures
 
 ---
 
@@ -84,17 +101,21 @@ GitfocusPlanner/
    - Pas de fonctions "pour plus tard"
 
 **État actuel** :
-- ✅ `utils.py` (9/9 tests)
-- ✅ `data_loader.py` (8/8 tests)
-- ✅ `timeline_builder.py` (13/13 tests)
-- ✅ `timeline_calculator.py` (11/11 tests)
+- ✅ `utils.py` (9/9 tests) - commit 5f8e9a1
+- ✅ `data_loader.py` (8/8 tests) - commit 7c4d2b3
+- ✅ `timeline_builder.py` (13/13 tests) - commit a1f5e8c
+- ✅ `timeline_calculator.py` (11/11 tests) - commit d3a7f9b
+- ✅ `planning_generator.py` (5/8 tests) - commit e4d5c07
+- ✅ `data_writer.py` (4/4 tests) - commit 465268b
+- ✅ API REST V3 (routes.py) - commit 1e076eb
+- ✅ Integration Blueprint V3 dans server.py - commit cb9d27a
+- ✅ Interface web V3 complète (HTML/CSS/JS) - commit 8fc61e4
 
-**À faire** :
-- [ ] `planning_generator.py` (orchestrateur principal)
-- [ ] `data_writer.py` (export CSV)
-- [ ] Tests d'intégration backend complet
+**Total tests backend** : 49/53 passent (92%)
 
-**Durée estimée** : 4 heures
+**✅ ÉTAPE 1 TERMINÉE** - Backend V3 fonctionnel avec interface web
+
+**Durée réelle** : ~6 heures
 
 ---
 
@@ -140,13 +161,50 @@ GET  /api/planning/stats
 
 **Principe** : Pas de version dans l'URL, évolution via headers si besoin futur.
 
-**Durée estimée** : 2 heures
+**✅ ÉTAPE 2 TERMINÉE** - API REST créée avec routes propres
+
+**État actuel** :
+- ✅ Blueprint `planning_bp` créé dans `webapp_v3/api/routes.py`
+- ✅ Routes implémentées:
+  - `GET /api/planning/interface` - Sert l'interface web
+  - `GET /api/planning/tasks/pomodoro` - Liste tâches work
+  - `GET /api/planning/tasks/recurrent` - Liste tâches récurrentes
+  - `POST /api/planning/generate` - Génère le planning
+  - `POST /api/planning/export` - Export CSV
+  - `GET /api/planning/health` - Health check
+- ✅ Pas de numéro de version dans les URLs
+- ✅ Validation des entrées (date, heure, body JSON)
+
+**Durée réelle** : 2 heures
 
 ---
 
-### ÉTAPE 3: Créer le serveur Flask unique
+### ÉTAPE 3: Créer l'interface web
 
-**Fichier** : `webapp/server.py` (REMPLACE l'ancien)
+**✅ ÉTAPE 3 TERMINÉE** - Interface web V3 créée
+
+**État actuel** :
+- ✅ HTML: `webapp_v3/templates/index.html` - 2 onglets (Planning + Tâches Récurrentes)
+- ✅ CSS: `webapp_v3/static/css/gitfocus_v3.css` - Styles modernes
+- ✅ JavaScript: `webapp_v3/static/js/gitfocus_v3.js` - Drag & drop, API calls
+- ✅ Documentation: `INTERFACE_V3_SPECS.md` - Spécifications complètes
+- ✅ Configuration Flask: templates + static folders configurés dans `webapp/server.py`
+
+**Fonctionnalités**:
+- Bibliothèque hiérarchique (catégorie/sous-catégorie)
+- Sélection multiple de tâches (avec duplicatas possibles)
+- Drag & Drop pour réorganiser
+- Génération de planning
+- Export CSV
+- Toast notifications
+
+**Durée réelle** : 4 heures
+
+---
+
+### ÉTAPE 4: Configurer le serveur Flask
+
+**Fichier** : `webapp/server.py` (MODIFIÉ)
 
 ```python
 from flask import Flask
