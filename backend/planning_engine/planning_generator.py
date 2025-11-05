@@ -152,30 +152,19 @@ def generate_planning_auto(
         }
 
     # ========================================================================
-    # STEP 3: Decide Alternance Strategy (🆕 Respiration vs Recurrent)
+    # STEP 3: Decide Alternance Strategy (🆕 User Manual Selection Only)
     # ========================================================================
     # If respiration_ids provided → use respirations for alternance
-    # Otherwise → score recurrent tasks and use top N
+    # Otherwise → NO pause tasks (user wants ONLY Pomodoros)
 
     if selected_respiration:
         logger.info("🔍 DEBUG: Using manually selected respiration tasks for alternance")
         pause_tasks = selected_respiration
         recurrent_task_scores = []  # No scoring needed
     else:
-        logger.info("🔍 DEBUG: No respiration tasks provided, using intelligent recurrent task selection")
-        from backend.planning_engine.smart_scorer import score_all_recurrent_tasks
-
-        scored_tasks = score_all_recurrent_tasks(all_recurrent, date, planning_history, done_history)
-
-        # Select top N
-        top_scored = scored_tasks[:max_recurrent_tasks]
-        pause_tasks = [st['task'] for st in top_scored]
-        recurrent_task_scores = [
-            {'task_id': st['task']['id'], 'task_name': st['task']['name'], 'score': st['score']}
-            for st in top_scored
-        ]
-
-        logger.info(f"Selected top {len(pause_tasks)} recurrent tasks (scores: {[st['score'] for st in top_scored]})")
+        logger.info("🔍 DEBUG: No respiration tasks selected, planning will contain ONLY Pomodoros (no pauses)")
+        pause_tasks = []  # No automatic pause insertion
+        recurrent_task_scores = []
 
     # ========================================================================
     # STEP 3.5: Log Advanced Options (Phase 4)
