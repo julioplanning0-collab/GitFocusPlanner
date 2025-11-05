@@ -136,6 +136,63 @@ body {
 }
 
 /* ========================================================================
+   TASK TABS
+   ======================================================================== */
+
+.task-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0;
+}
+
+.task-tab {
+    padding: 10px 20px;
+    border: none;
+    background: transparent;
+    color: #6b7280;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-bottom: 3px solid transparent;
+    transition: all 0.3s ease;
+    position: relative;
+    bottom: -2px;
+}
+
+.task-tab:hover {
+    color: #111827;
+    background: #f9fafb;
+}
+
+.task-tab.active {
+    color: var(--color-primary);
+    border-bottom-color: var(--color-primary);
+    font-weight: 600;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========================================================================
    TASK SECTION
    ======================================================================== */
 

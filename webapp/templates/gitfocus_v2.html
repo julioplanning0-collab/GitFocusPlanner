@@ -39,56 +39,69 @@
 
     <!-- Main Container -->
     <div class="container main-container">
-        <!-- Left Panel: Task Selection -->
+        <!-- Left Panel: Task Selection with Tabs -->
         <div class="panel panel-left" data-panel="tasks">
             <h2>📋 Sélection des Tâches</h2>
 
-            <!-- Pomodoro Tasks Section -->
-            <section class="task-section">
-                <div class="section-header">
-                    <h3>🔴 Tâches Pomodoro (Travail)</h3>
-                    <span class="task-count" id="pomodoro-count">0 tâches</span>
-                </div>
-                <div class="task-list" id="pomodoro-task-list">
-                    <div class="loading">Chargement...</div>
-                </div>
-            </section>
+            <!-- Task Type Tabs -->
+            <div class="task-tabs">
+                <button class="task-tab active" data-tab="pomodoro">🔴 Pomodoro</button>
+                <button class="task-tab" data-tab="pauses">🟢 Pauses</button>
+                <button class="task-tab" data-tab="recurrent">🟣 Récurrentes</button>
+            </div>
 
-            <!-- Respiration Tasks (Click to Add) -->
-            <section class="task-section">
-                <div class="section-header">
-                    <h3>🟢 Tâches Respiratoires (Pauses)</h3>
-                    <span class="task-count">
-                        <span id="respiration-count">0 tâches</span>
-                        <span class="badge badge-info">Cliquez pour ajouter (permet duplicatas)</span>
-                    </span>
-                </div>
-                <div class="info-box">
-                    <p><strong>💡 Sélection Multiple:</strong></p>
-                    <p>Cliquez plusieurs fois sur une tâche pour l'ajouter plusieurs fois au planning. Le compteur (x2, x3...) indique le nombre de sélections.</p>
-                </div>
-                <div id="respiration-task-list" class="task-list">
-                    <div class="loading">Chargement des tâches respiratoires...</div>
-                </div>
-            </section>
+            <!-- Tab Content: Pomodoro Tasks -->
+            <div class="tab-content active" id="tab-pomodoro">
+                <section class="task-section">
+                    <div class="section-header">
+                        <h3>🔴 Tâches Pomodoro (Travail)</h3>
+                        <span class="task-count" id="pomodoro-count">0 tâches</span>
+                    </div>
+                    <div class="task-list" id="pomodoro-task-list">
+                        <div class="loading">Chargement...</div>
+                    </div>
+                </section>
+            </div>
 
-            <!-- Recurrent Tasks (Click to Add) -->
-            <section class="task-section">
-                <div class="section-header">
-                    <h3>🟣 Tâches Récurrentes</h3>
-                    <span class="task-count">
-                        <span id="recurrent-count">0 tâches</span>
-                        <span class="badge badge-info">Cliquez pour ajouter au planning</span>
-                    </span>
-                </div>
-                <div class="info-box">
-                    <p><strong>💡 Mode Manuel:</strong></p>
-                    <p>Cliquez sur une tâche pour l'ajouter à la première place libre du planning. Vous pouvez ajouter la même tâche plusieurs fois.</p>
-                </div>
-                <div id="recurrent-tasks-list" class="task-list">
-                    <div class="loading">Chargement des tâches récurrentes...</div>
-                </div>
-            </section>
+            <!-- Tab Content: Respiration/Pause Tasks -->
+            <div class="tab-content" id="tab-pauses">
+                <section class="task-section">
+                    <div class="section-header">
+                        <h3>🟢 Tâches de Pause (Courtes)</h3>
+                        <span class="task-count">
+                            <span id="respiration-count">0 tâches</span>
+                            <span class="badge badge-info">Cliquez pour ajouter (duplicatas autorisés)</span>
+                        </span>
+                    </div>
+                    <div class="info-box">
+                        <p><strong>💡 Sélection Multiple:</strong></p>
+                        <p>Cliquez plusieurs fois sur une tâche pour l'ajouter plusieurs fois au planning. Le compteur (x2, x3...) indique le nombre de sélections.</p>
+                    </div>
+                    <div id="respiration-task-list" class="task-list">
+                        <div class="loading">Chargement des tâches de pause...</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Tab Content: Recurrent Tasks -->
+            <div class="tab-content" id="tab-recurrent">
+                <section class="task-section">
+                    <div class="section-header">
+                        <h3>🟣 Tâches Récurrentes</h3>
+                        <span class="task-count">
+                            <span id="recurrent-count">0 tâches</span>
+                            <span class="badge badge-info">Cliquez pour ajouter au planning</span>
+                        </span>
+                    </div>
+                    <div class="info-box">
+                        <p><strong>💡 Mode Manuel:</strong></p>
+                        <p>Cliquez sur une tâche pour l'ajouter à la première place libre du planning. Vous pouvez ajouter la même tâche plusieurs fois.</p>
+                    </div>
+                    <div id="recurrent-tasks-list" class="task-list">
+                        <div class="loading">Chargement des tâches récurrentes...</div>
+                    </div>
+                </section>
+            </div>
 
             <!-- Advanced Options (Phase 4) -->
             <section class="task-section">
