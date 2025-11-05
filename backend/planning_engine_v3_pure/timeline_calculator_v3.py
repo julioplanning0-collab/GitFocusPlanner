@@ -304,8 +304,8 @@ def convertTempsMortsToObstacles(
         planning_start = datetime(2025, 11, 6, 14, 0)
         temps_mort = {
             'date': '2025-11-06',
-            'heure_debut': '15:00',
-            'heure_fin': '16:00',
+            'start': '15:00',
+            'end': '16:00',
             'nom': 'Réunion'
         }
         → Obstacle {startMinute: 60, endMinute: 120}

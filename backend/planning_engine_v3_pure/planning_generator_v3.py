@@ -32,7 +32,7 @@ from .data_loader_v3 import (
     get_task_name,
     get_task_id
 )
-from .timeline_linear import (
+from .timeline_calculator_v3 import (
     rebuildTimeline,
     convertTempsMortsToObstacles,
     sortTasksByOffset

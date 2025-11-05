@@ -4,9 +4,8 @@ V3 PURE - NO V2 LOGIC ALLOWED
 Data loading functions for V3 with unified recurrent tasks.
 
 KEY CHANGES FROM V2:
-- NO separate TACHES_RESPIRATOIRES.csv (removed in V3)
 - Single TACHES_RECURRENTES.v3.csv with IS_PAUSE field:
-  - IS_PAUSE = 1 → Former respiration tasks (pauses)
+  - IS_PAUSE = 1 → Pause tasks (short breaks 5-20min)
   - IS_PAUSE = 0 → True recurrent tasks
 - Returns List[Dict] (NO Pydantic, pure backend logic)
 """
@@ -15,6 +14,7 @@ import csv
 import logging
 from pathlib import Path
 from typing import List, Dict, Optional
+from .types_v3 import TaskV3, Obstacle  # V3 types for type hints
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -342,6 +342,34 @@ def validate_task_fields(task: Dict, required_fields: List[str]) -> bool:
             return False
     return True
 
+
+# ==================== PUBLIC API FUNCTIONS (for routes_v3.py) ====================
+
+def load_all_pomodoro_tasks(csv_path: Path) -> List[Dict]:
+    """
+    Load ALL pomodoro tasks from LISTE_MERE.v3.csv.
+
+    Used by API endpoint GET /api/v3/tasks/pomodoro
+
+    Returns:
+        List of all pomodoro task dicts (active and inactive)
+    """
+    return read_csv_file(csv_path)
+
+
+def load_all_recurrent_tasks(csv_path: Path) -> List[Dict]:
+    """
+    Load ALL recurrent tasks from TACHES_RECURRENTES.v3.csv.
+
+    Used by API endpoint GET /api/v3/tasks/recurrent
+
+    Returns:
+        List of all recurrent task dicts (includes IS_PAUSE field)
+    """
+    return read_csv_file(csv_path)
+
+
+# ==================== HELPER FUNCTIONS ====================
 
 def get_task_duration_minutes(task: Dict) -> int:
     """
