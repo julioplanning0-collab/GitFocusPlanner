@@ -31,7 +31,7 @@ try {
 
 # [2/5] Verifier repertoire des donnees
 Write-Host "[2/5] Verification repertoire donnees..." -ForegroundColor Yellow
-$dataDir = "C:\Users\juli0\AndroidStudioProjects\GitFocus_2\prod_data"
+$dataDir = "$ProjectRoot\prod_data"
 
 if (-not (Test-Path $dataDir)) {
     Write-Host "[ERREUR] Repertoire prod_data absent: $dataDir" -ForegroundColor Red
