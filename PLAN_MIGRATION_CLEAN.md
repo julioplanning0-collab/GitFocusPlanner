@@ -61,6 +61,28 @@ GitfocusPlanner/
 
 ### ÉTAPE 1: Finaliser le développement V3
 
+**⚠️ RÈGLES À RESPECTER PENDANT CETTE ÉTAPE** :
+
+1. **TESTER AVANT DE COMMITTER**
+   - Lancer pytest après chaque modification
+   - Vérifier que TOUS les tests passent (pas juste les nouveaux)
+   - Ne JAMAIS committer du code qui ne compile pas
+
+2. **UN FICHIER = UN COMMIT**
+   - Créer `planning_generator.py` → Commit
+   - Créer `data_writer.py` → Commit
+   - Messages de commit clairs : "feat: ajout planning_generator avec tests (X/X passent)"
+
+3. **TESTS UNITAIRES OBLIGATOIRES**
+   - Chaque fonction publique doit avoir AU MOINS 1 test
+   - Coverage minimum : 80%
+   - Tests AVANT le code (TDD si possible)
+
+4. **PAS DE CODE MORT**
+   - Supprimer physiquement (pas commenter) le code inutilisé
+   - Pas de `# TODO` sans ticket associé
+   - Pas de fonctions "pour plus tard"
+
 **État actuel** :
 - ✅ `utils.py` (9/9 tests)
 - ✅ `data_loader.py` (8/8 tests)
@@ -77,6 +99,28 @@ GitfocusPlanner/
 ---
 
 ### ÉTAPE 2: Créer l'API REST finale
+
+**⚠️ RÈGLES À RESPECTER PENDANT CETTE ÉTAPE** :
+
+1. **PAS DE NUMÉRO DE VERSION DANS LES URLS**
+   - ❌ `/api/v2/planning/generate`
+   - ✅ `/api/planning/generate`
+   - Évolution future via headers API si besoin
+
+2. **NOMS DE ROUTES EXPLICITES**
+   - Utiliser des verbes HTTP (GET, POST, PUT, DELETE)
+   - Routes RESTful : `/api/planning/tasks` pas `/api/getTasks`
+   - Pluriel pour les collections : `/tasks` pas `/task`
+
+3. **VALIDATION DES ENTRÉES**
+   - Valider TOUS les paramètres d'entrée
+   - Retourner 400 Bad Request si données invalides
+   - Messages d'erreur clairs et actionnables
+
+4. **TESTS API OBLIGATOIRES**
+   - Tester chaque endpoint (success + error cases)
+   - Vérifier les codes HTTP (200, 400, 404, 500)
+   - Valider le format JSON de sortie
 
 **Fichier** : `webapp/api/routes.py` (SANS suffixe v2/v3)
 
