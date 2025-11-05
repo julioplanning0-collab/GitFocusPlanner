@@ -48,15 +48,10 @@ def create_app():
     @app.route('/health')
     def health_check():
         """Health check endpoint."""
-        from backend.planning_engine.placement_logger import get_history_stats
-
-        history_stats = get_history_stats(Config.DATA_DIR)
-
         return {
             'status': 'healthy',
             'version': '2.0',
-            'config': Config.info(),
-            'history_stats': history_stats
+            'config': Config.info()
         }
 
     # Root redirect

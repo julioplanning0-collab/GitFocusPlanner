@@ -113,9 +113,7 @@ Write-Host "============================================================" -Foreg
 Write-Host ""
 Write-Host " URLs d'acces:" -ForegroundColor White
 Write-Host "   Interface Web V2: " -NoNewline -ForegroundColor White
-Write-Host "http://localhost:5000/gitfocus-v2" -ForegroundColor Green
-Write-Host "   Interface Web V3: " -NoNewline -ForegroundColor White
-Write-Host "http://localhost:5000/gitfocus-v3" -ForegroundColor Cyan
+Write-Host "http://localhost:5000/api/v2/gitfocus/interface" -ForegroundColor Green
 Write-Host "   Health Check:     " -NoNewline -ForegroundColor White
 Write-Host "http://localhost:5000/health" -ForegroundColor Green
 Write-Host ""
@@ -149,9 +147,8 @@ Write-Host "============================================================" -Foreg
 Write-Host " SERVEUR DEMARRE" -ForegroundColor Green
 Write-Host "============================================================" -ForegroundColor Green
 Write-Host ""
-Write-Host " Interfaces web:" -ForegroundColor White
-Write-Host "   V2: http://localhost:5000/gitfocus-v2" -ForegroundColor Green
-Write-Host "   V3: http://localhost:5000/gitfocus-v3" -ForegroundColor Cyan
+Write-Host " Interface web:" -ForegroundColor White
+Write-Host "   V2: http://localhost:5000/api/v2/gitfocus/interface" -ForegroundColor Green
 Write-Host ""
 Write-Host " PID Serveur: $($serverProcess.Id)" -ForegroundColor Gray
 Write-Host " Pour arreter: Ctrl+C ou fermez la fenetre du serveur" -ForegroundColor Yellow
@@ -161,7 +158,7 @@ Write-Host ""
 # Ouvrir le navigateur automatiquement (V2 par defaut)
 Write-Host "Ouverture du navigateur dans 3 secondes..." -ForegroundColor Yellow
 Start-Sleep -Seconds 3
-Start-Process "http://localhost:5000/gitfocus-v2"
+Start-Process "http://localhost:5000/api/v2/gitfocus/interface"
 
 Write-Host ""
 Write-Host "Appuyez sur une touche pour fermer cette fenetre..." -ForegroundColor Gray

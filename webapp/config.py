@@ -47,8 +47,8 @@ class Config:
 
         required_files = [
             'LISTE_MERE.v2.csv',
-            'TACHES_RESPIRATOIRES.v2.csv',
             'TACHES_RECURRENTES.v2.csv',
+            'TACHES_PLANIFIEES.v2.csv',
             'temps_morts.csv',
             'categories.csv'
         ]
