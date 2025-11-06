@@ -33,8 +33,9 @@ def get_prod_data_path() -> Path:
     Returns:
         Path to production data directory
     """
-    # IMPORTANT: V3 uses same prod_data location as V2
-    return Path(r"C:\Users\juli0\AndroidStudioProjects\GitFocus_2\prod_data")
+    # V3 Pure: data in GitfocusPlanner/data/prod_data
+    project_root = Path(__file__).parent.parent.parent
+    return project_root / 'data' / 'prod_data'
 
 
 def get_csv_path(filename: str) -> Path:

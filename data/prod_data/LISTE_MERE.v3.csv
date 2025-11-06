@@ -1,0 +1,6 @@
+CODE_TACHE;NOM_TACHE;DESCRIPTION;CATEGORIE;DUREE_MIN;STATUS
+"TASK001";"Tester flux podcast Android";"Vérifier lecture podcasts depuis assets + synchro";"Projets";50;"available"
+"TASK002";"Préparer bureau";"remplir les sacs";"Projets";75;"available"
+"TASK003";"Vérifier synchro podcast";"Tester le script sync_podcast_to_android.py";"Projets";50;"available"
+"TASK004";"Debug audio si nécessaire";"Corriger problèmes de lecture/décodage";"Projets";50;"available"
+"TASK005";"Tester switch audio ménage";"Vérifier switch Audio pendant tâches MENAGE";"Projets";50;"available"

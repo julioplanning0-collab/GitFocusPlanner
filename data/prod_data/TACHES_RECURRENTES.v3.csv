@@ -1,0 +1,11 @@
+CODE_RECURRENCE;NOM_TACHE;DESCRIPTION;CATEGORIE;DUREE_MIN;IS_ACTIVE;IS_PAUSE
+"REC001";"Méditation";"Exercices de respiration profonde";"Respiration";10;"1";"1"
+"REC002";"Pause café";"Prendre un café";"Pause";5;"1";"1"
+"REC003";"Marcher";"Marcher 5 minutes";"Pause";5;"1";"1"
+"REC004";"Respiration";"Exercices de respiration";"Bien-être";5;"1";"1"
+"REC005";"Thé";"Prendre un thé";"Pause";10;"1";"1"
+"REC006";"Arroser plantes";"Entretien quotidien plantes";"Entretien";15;"1";"0"
+"REC007";"Brosser les dents";"Hygiène dentaire";"Hygiène";5;"1";"0"
+"REC008";"Jouer avec Gigi";"Interaction avec chat";"Animaux";10;"1";"0"
+"REC009";"Jouer avec Coco";"Interaction avec chat";"Animaux";10;"1";"0"
+"REC010";"Gamelle Gigi";"Remplir gamelle";"Animaux";5;"1";"0"
