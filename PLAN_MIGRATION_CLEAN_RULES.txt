@@ -1,0 +1,35 @@
+RÈGLES ÉTAPE 3 (Serveur Flask):
+- UN SEUL FICHIER server.py (pas server_v2.py, server_v3.py)
+- Configuration via variables d'environnement ou config.py
+- Health check endpoint obligatoire: /health
+- Gestion d'erreurs globale (try/except au niveau app)
+
+RÈGLES ÉTAPE 4 (Frontend):
+- PAS DE SUFFIXES _v2 ou _v3 dans les noms de fichiers
+- Convention de nommage: planner.html, planner.css, planner.js
+- Séparation des responsabilités: HTML structure, CSS présentation, JS interaction
+- Pas de logique métier dans le JS (seulement affichage + appels API)
+
+RÈGLES ÉTAPE 5 (Tests):
+- Tous les tests doivent passer AVANT de continuer
+- Tests de non-régression = re-tester TOUTES les fonctionnalités
+- Si un test échoue, ARRÊTER et corriger avant de continuer
+- Coverage minimum 80%
+
+RÈGLES ÉTAPE 6 (Suppression V2):
+- git rm (pas de simple rm)
+- SUPPRIMER physiquement, ne PAS commenter
+- Ne PAS garder de .old, .backup, etc.
+- Commit atomique de suppression
+
+RÈGLES ÉTAPE 7 (Renommage V3):
+- git mv (préserve l'historique Git)
+- Supprimer TOUS les suffixes _v3
+- Vérifier qu'aucun fichier ne contient "v3" dans son nom
+- Commit atomique de renommage
+
+RÈGLES ÉTAPE 8 (Imports):
+- Recherche globale: grep -r "v2" et grep -r "v3"
+- Corriger TOUS les imports (pas juste ceux qui cassent)
+- Relancer tous les tests après chaque correction
+- Vérification finale: aucune référence à v2 ou v3

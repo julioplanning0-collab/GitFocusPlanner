@@ -699,11 +699,14 @@ async function autoGenerateTimeline() {
         clearTimeout(timelineGenerationTimer);
     }
 
-    // Check if we have minimum required data
-    if (state.selectedPomodoroIds.length === 0 || state.selectedRecurrentIds.length === 0) {
+    // Check if we have minimum required data (Pomodoros only required)
+    if (state.selectedPomodoroIds.length === 0) {
         showEmptyTimeline();
         return;
     }
+
+    // Note: Timeline can be generated with Pomodoros only (no pauses)
+    // If no recurrents selected, Pomodoros will be consecutive
 
     // Debounce: wait 300ms before generating
     timelineGenerationTimer = setTimeout(async () => {
@@ -735,8 +738,15 @@ async function autoGenerateTimeline() {
 
             if (data.success) {
                 state.currentPlanning = data.planning;
+
+                // Debug: compter les types de slots
+                const types = {};
+                data.planning.forEach(slot => {
+                    types[slot.type] = (types[slot.type] || 0) + 1;
+                });
+                console.log(`✅ Timeline auto-generated: ${data.planning.length} slots`, types);
+
                 renderTimelineDynamic(data.planning, data.statistics);
-                console.log(`✅ Timeline auto-generated: ${data.planning.length} slots`);
             } else {
                 throw new Error(data.error || 'Erreur inconnue');
             }
@@ -870,6 +880,11 @@ function formatDateFr(dateStr) {
 // ============================================
 function updateSelectionSummary() {
     const summary = document.getElementById('selectionSummary');
+
+    // Element doesn't exist in current HTML, skip for now
+    if (!summary) {
+        return;
+    }
 
     // Count pauses in selected recurrents
     const pauseCount = state.selectedRecurrentIds.filter(id => {

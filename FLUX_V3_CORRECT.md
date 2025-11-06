@@ -17,16 +17,16 @@
 
 ### V3 (Version Cible)
 ```
-3 Onglets:
+2 Onglets SEULEMENT:
 ├── Pomodoro (tâches de travail) - INCHANGÉ
-├── Pauses (drag & drop, inclut anciennes respirations) ✅ NOUVEAU
-└── Récurrentes (inclut respirations + autres tâches) ✅ FUSIONNÉ
+└── Récurrentes (= TOUTES LES PAUSES, drag & drop) ✅ FUSIONNÉ
 ```
 
-**Pourquoi ce changement?**
-- Les tâches respiratoires étaient un type spécial artificiel
-- En réalité, ce sont juste des tâches récurrentes courtes (5-20min)
-- Simplification: 1 seul fichier CSV pour toutes les pauses/récurrentes
+**⚠️ IMPORTANT - Changement architectural clé:**
+- **TOUTES les tâches récurrentes sont des pauses** (IS_PAUSE=1 pour tout le CSV)
+- Il n'y a plus de distinction entre "pauses" et "récurrentes"
+- L'onglet "Récurrentes" contient toutes les pauses (anciennes respirations + autres pauses courtes)
+- Simplification: 1 seul fichier CSV, 1 seul onglet pour toutes les pauses
 
 ---
 
@@ -54,15 +54,16 @@ temps_morts.csv           → Obstacles (inchangé)
 ### Structure TACHES_RECURRENTES.v3.csv
 
 ```csv
-ID;NAME;DESCRIPTION;CATEGORY;DURATION_MIN;RECURRENCE_TYPE;IS_ACTIVE;IS_PAUSE
-"REC001";"Méditation";"Respiration profonde";"Respiration";10;"daily";1;1
-"REC002";"Arroser plantes";"Entretien quotidien";"Entretien";15;"2_days";1;0
-"REC003";"Pause café";"Courte pause";"Respiration";5;"daily";1;1
+ID;NAME;DESCRIPTION;CATEGORY;SUB_CATEGORY;DURATION_MIN;RECURRENCE_TYPE;RECURRENCE_INTERVAL;PRIORITY;STATUS;IS_ACTIVE;IS_PAUSE
+"REC001";"Méditation";"Respiration profonde";"Pause";"Respiration";10;"daily";1;2;"available";1;1
+"REC002";"Arroser plantes";"Entretien quotidien";"Maison";"Jardinage";15;"weekly";7;2;"available";1;1
+"REC003";"Pause café";"Courte pause";"Pause";"Repos";5;"daily";1;2;"available";1;1
 ```
 
-**Nouveau champ** `IS_PAUSE`:
-- `IS_PAUSE = 1` → Ancienne tâche respiratoire (affichée onglet Pauses)
-- `IS_PAUSE = 0` → Vraie tâche récurrente (affichée onglet Récurrentes)
+**⚠️ Champ** `IS_PAUSE`:
+- **`IS_PAUSE = 1` pour TOUTES les lignes** (toutes les tâches récurrentes sont des pauses)
+- Ce champ existe pour compatibilité future mais actuellement toujours = 1
+- Toutes ces tâches apparaissent dans l'onglet "Récurrentes" et sont utilisées comme pauses entre Pomodoros
 
 ---
 
@@ -80,33 +81,26 @@ ID;NAME;DESCRIPTION;CATEGORY;DURATION_MIN;RECURRENCE_TYPE;IS_ACTIVE;IS_PAUSE
 **Source**: `LISTE_MERE.v3.csv`
 **Action**: Checkboxes
 
-### Onglet 2: Pauses ✅ NOUVEAU - Drag & Drop
+### Onglet 2: Récurrentes ✅ TOUTES LES PAUSES - Click & Drag & Drop
 ```
-┌──────────────────────┬─────────────────────────────┐
-│ DISPONIBLES          │ SÉLECTIONNÉES (ordre)       │
-├──────────────────────┼─────────────────────────────┤
-│ 🫁 Méditation 10min  │ 1. 🫁 Méditation 10min      │
-│ 🌬️ Respiration 5min  │ 2. 🌬️ Respiration 5min      │
-│ ☕ Pause café 5min   │ 3. 🌬️ Respiration 5min (dup)│
-│                      │                             │
-│ [Drag items ici →]   │ [📌 Épingler] [🗑️ Vider]   │
-│                      │ [Envoyer vers planning]     │
-└──────────────────────┴─────────────────────────────┘
+┌──────────────────────────┬─────────────────────────────┐
+│ DISPONIBLES (groupées)   │ SÉLECTIONNÉES (ordre)       │
+├──────────────────────────┼─────────────────────────────┤
+│ 📂 Pause                 │ 1. 🫁 Méditation 10min      │
+│   🫁 Méditation 10min    │ 2. 🌬️ Respiration 5min      │
+│   🌬️ Respiration 5min    │ 3. 🫁 Méditation 10min (dup)│
+│   ☕ Pause café 5min     │ 4. ☕ Pause café 5min       │
+│ 📂 Maison                │                             │
+│   🪴 Arroser plantes 5min│ [🗑️ Vider]                 │
+│   🧹 Ménage salon 5min   │                             │
+└──────────────────────────┴─────────────────────────────┘
 ```
-**Source**: `TACHES_RECURRENTES.v3.csv WHERE IS_PAUSE=1`
-**Action**: Drag & drop pour ordonner, duplicatas autorisés
-
-### Onglet 3: Récurrentes (Filtre IS_PAUSE=0)
-```
-┌──────────────────────────────────────────┐
-│ Tâches Récurrentes                       │
-│ [ON]  🪴 Arroser plantes (15min, 2j)    │
-│ [ON]  🧹 Ménage salon (30min, weekly)   │
-│ [OFF] 📧 Trier emails (20min, daily)    │
-└──────────────────────────────────────────┘
-```
-**Source**: `TACHES_RECURRENTES.v3.csv WHERE IS_PAUSE=0`
-**Action**: Toggle ON/OFF
+**Source**: `TACHES_RECURRENTES.v3.csv` (IS_PAUSE=1 pour TOUT)
+**Action**:
+- Click sur tâche → ajoute à droite
+- Drag & drop dans panneau droit → réordonner
+- Duplicatas autorisés (même pause plusieurs fois)
+- Ces tâches seront insérées comme pauses entre les Pomodoros
 
 ---
 

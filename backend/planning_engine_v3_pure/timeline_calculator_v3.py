@@ -314,10 +314,10 @@ def convertTempsMortsToObstacles(
 
     for tm in temps_morts:
         try:
-            # Parse date and times
-            date_str = tm.get('date', '')
-            heure_debut = tm.get('heure_debut', '')
-            heure_fin = tm.get('heure_fin', '')
+            # Parse date and times (support both uppercase and lowercase keys)
+            date_str = tm.get('DATE', tm.get('date', ''))
+            heure_debut = tm.get('HEURE DEBUT', tm.get('heure_debut', ''))
+            heure_fin = tm.get('HEURE FIN', tm.get('heure_fin', ''))
 
             if not all([date_str, heure_debut, heure_fin]):
                 continue

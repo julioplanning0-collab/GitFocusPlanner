@@ -103,7 +103,7 @@ def read_csv_file(csv_path: Path, encoding: str = CSV_ENCODING) -> List[Dict]:
 
 def load_pomodoro_tasks() -> List[Dict]:
     """
-    Load Pomodoro tasks from LISTE_MERE.v2.csv.
+    Load Pomodoro tasks from LISTE_MERE.v3.csv.
 
     Returns:
         List of task dicts with fields:
@@ -113,7 +113,7 @@ def load_pomodoro_tasks() -> List[Dict]:
         - STATUS: Task status
         - ... other fields
     """
-    csv_path = get_csv_path("LISTE_MERE.v2.csv")
+    csv_path = get_csv_path("LISTE_MERE.v3.csv")
     return read_csv_file(csv_path)
 
 
@@ -256,7 +256,13 @@ def load_recurrent_tasks_by_ids_v3(task_ids: List[str]) -> List[Dict]:
         → Returns [task_001, task_003, task_001] (duplicate preserved)
     """
     all_tasks = load_recurrent_tasks_v3(include_pauses=True, include_recurrent=True)
-    task_dict = {task['CODE_RECURRENCE']: task for task in all_tasks}
+
+    # Support both old format (CODE_RECURRENCE) and new format (ID)
+    task_dict = {}
+    for task in all_tasks:
+        task_id = task.get('ID', task.get('CODE_RECURRENCE', ''))
+        if task_id:
+            task_dict[task_id] = task
 
     result = []
     for task_id in task_ids:
@@ -317,8 +323,8 @@ def load_temps_morts(date: str) -> List[Dict]:
     csv_path = get_csv_path("temps_morts.csv")
     all_temps_morts = read_csv_file(csv_path)
 
-    # Filter by date
-    filtered = [tm for tm in all_temps_morts if tm.get('date') == date]
+    # Filter by date (CSV uses 'DATE' in uppercase)
+    filtered = [tm for tm in all_temps_morts if tm.get('DATE', tm.get('date')) == date]
 
     logger.info(f"Loaded {len(filtered)} temps morts for {date}")
     return filtered
@@ -377,15 +383,17 @@ def get_task_duration_minutes(task: Dict) -> int:
     Extract duration from task dict.
 
     Args:
-        task: Task dict with DUREE_MIN field
+        task: Task dict with DURATION_MIN or DUREE_MIN field
 
     Returns:
         Duration in minutes (default: 0 if invalid)
     """
     try:
-        return int(task.get('DUREE_MIN', 0))
+        # Support both new format (DURATION_MIN) and old format (DUREE_MIN)
+        duration = task.get('DURATION_MIN', task.get('DUREE_MIN', 0))
+        return int(duration)
     except (ValueError, TypeError):
-        logger.warning(f"Invalid DUREE_MIN in task: {task}")
+        logger.warning(f"Invalid DURATION_MIN/DUREE_MIN in task: {task}")
         return 0
 
 
@@ -394,12 +402,13 @@ def get_task_name(task: Dict) -> str:
     Extract task name from dict.
 
     Args:
-        task: Task dict with NOM_TACHE field
+        task: Task dict with NAME or NOM_TACHE field
 
     Returns:
         Task name (default: "Unnamed" if missing)
     """
-    return task.get('NOM_TACHE', 'Unnamed')
+    # Support both new format (NAME) and old format (NOM_TACHE)
+    return task.get('NAME', task.get('NOM_TACHE', 'Unnamed'))
 
 
 def get_task_id(task: Dict) -> str:
@@ -410,6 +419,7 @@ def get_task_id(task: Dict) -> str:
         task: Task dict
 
     Returns:
-        Task ID from CODE_TACHE, CODE_RECURRENCE, or "UNKNOWN"
+        Task ID from ID, CODE_TACHE, CODE_RECURRENCE, or "UNKNOWN"
     """
-    return task.get('CODE_TACHE') or task.get('CODE_RECURRENCE') or 'UNKNOWN'
+    # Support new format (ID) and old formats (CODE_TACHE, CODE_RECURRENCE)
+    return task.get('ID') or task.get('CODE_TACHE') or task.get('CODE_RECURRENCE') or 'UNKNOWN'

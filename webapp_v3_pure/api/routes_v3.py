@@ -144,12 +144,14 @@ def get_recurrent_tasks():
             filtered_tasks = raw_tasks
 
         # Transform CSV format → Frontend format
+        # V3 CSV uses: ID, NAME, DURATION_MIN, CATEGORY, SUB_CATEGORY
         tasks = [
             {
-                'id': task['CODE_RECURRENCE'],
-                'name': task['NOM_TACHE'],
-                'duration': int(task['DUREE_MIN']),
-                'category': task.get('CATEGORIE', ''),
+                'id': task.get('ID', task.get('CODE_RECURRENCE', '')),  # Support both formats
+                'name': task.get('NAME', task.get('NOM_TACHE', '')),
+                'duration': int(task.get('DURATION_MIN', task.get('DUREE_MIN', 0))),
+                'category': task.get('CATEGORY', task.get('CATEGORIE', '')),
+                'subCategory': task.get('SUB_CATEGORY', ''),
                 'description': task.get('DESCRIPTION', ''),
                 'isPause': task.get('IS_PAUSE') == '1',
                 'isActive': task.get('IS_ACTIVE') == '1'
@@ -245,10 +247,16 @@ def generate_planning():
 
         # Extract parameters
         date = data['date']
-        planning_start_time = data['planning_start_time']
+        planning_start_time_str = data['planning_start_time']
         pomodoro_ids = data['pomodoro_ids']
         pause_ids = data['pause_ids']
         recurrent_ids = data.get('recurrent_ids', [])
+
+        # Convert planning_start_time from "HH:MM" to datetime object
+        planning_start_time = datetime.strptime(
+            f"{date} {planning_start_time_str}",
+            "%Y-%m-%d %H:%M"
+        )
 
         # Options
         options = PlanningOptions(
@@ -258,18 +266,36 @@ def generate_planning():
         )
 
         # Generate planning (delegates to V3 Pure backend)
-        data_dir = _get_data_dir()
-        result = generate_planning_v3(
+        # Note: generate_planning_v3 only accepts 5 params (no recurrent_ids, no data_dir)
+        # recurrent_ids not used in V3 (pauses serve as both pauses and recurrents)
+        timeline = generate_planning_v3(
             date=date,
             planning_start_time=planning_start_time,
             pomodoro_ids=pomodoro_ids,
             pause_ids=pause_ids,
-            recurrent_ids=recurrent_ids,
-            options=options,
-            data_dir=data_dir
+            options=options
         )
 
-        return jsonify(result)
+        # Convert Timeline format → Frontend format
+        from backend.planning_engine_v3_pure.data_writer_v3 import convert_timeline_to_display
+        from backend.planning_engine_v3_pure.planning_generator_v3 import calculate_planning_statistics
+
+        planning_start_dt = datetime.strptime(timeline['planningStartTime'], "%Y-%m-%dT%H:%M:%S")
+        # convert_timeline_to_display inserts temps_mort slots for visual display
+        display_slots = convert_timeline_to_display(
+            timeline['tasks'],
+            planning_start_dt,
+            date,
+            obstacles=timeline.get('obstacles', [])
+        )
+        statistics = calculate_planning_statistics(timeline)
+
+        return jsonify({
+            'success': True,
+            'date': date,
+            'planning': display_slots,
+            'statistics': statistics
+        })
 
     except ValueError as e:
         logger.warning(f"Invalid planning request: {e}")

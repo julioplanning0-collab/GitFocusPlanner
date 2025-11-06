@@ -161,18 +161,22 @@ def log_pause_usage(planning: List[Dict], export_timestamp: str, data_dir: Path)
 def convert_timeline_to_display(
     timeline: List[Dict],
     planning_start: datetime,
-    date: str
+    date: str,
+    obstacles: List[Dict] = None
 ) -> List[Dict]:
     """
     Convert timeline with minuteOffsets to display format with absolute times.
+
+    Inserts visible temps_mort slots where tasks were skipped due to obstacles.
 
     Args:
         timeline: List of TaskV3 with minuteOffset calculated
         planning_start: Planning start datetime
         date: Date string (YYYY-MM-DD)
+        obstacles: List of obstacles (optional, for visual display)
 
     Returns:
-        List of display slots with absolute times
+        List of display slots with absolute times (includes temps_mort slots)
 
     Example:
         >>> from datetime import datetime
@@ -188,18 +192,24 @@ def convert_timeline_to_display(
         '13:50'
     """
     from datetime import timedelta
+    import logging
 
-    display_slots = []
+    logger = logging.getLogger(__name__)
 
+    # Nouvelle approche : fusionner obstacles et tâches, puis trier par minuteOffset
+    all_items = []
+
+    obstacles = obstacles or []
+    logger.info(f"convert_timeline_to_display: Received {len(timeline)} tasks and {len(obstacles)} obstacles")
+
+    # Ajouter toutes les tâches
     for task in timeline:
-        # Calculate absolute times
         start_dt = planning_start + timedelta(minutes=task['minuteOffset'])
         end_dt = start_dt + timedelta(minutes=task['duration'])
-
-        # Handle day overflow
         task_date = start_dt.strftime('%Y-%m-%d')
 
-        display_slots.append({
+        all_items.append({
+            '_minuteOffset': task['minuteOffset'],  # Internal sorting key
             'date': task_date,
             'heure_debut': start_dt.strftime('%H:%M'),
             'heure_fin': end_dt.strftime('%H:%M'),
@@ -212,7 +222,40 @@ def convert_timeline_to_display(
             'rescheduled': task.get('rescheduled', False)
         })
 
-    return display_slots
+    # Ajouter tous les obstacles (temps morts)
+    for obs in obstacles:
+        obs_start = obs['startMinute']
+        obs_end = obs['endMinute']
+
+        logger.info(f"Processing obstacle: startMinute={obs_start}, endMinute={obs_end}, title={obs.get('title', obs.get('originalData', {}).get('TITRE', '?'))}")
+
+        # Calculer les heures absolues
+        obs_start_dt = planning_start + timedelta(minutes=obs_start)
+        obs_end_dt = planning_start + timedelta(minutes=obs_end)
+        obs_date = obs_start_dt.strftime('%Y-%m-%d')
+
+        all_items.append({
+            '_minuteOffset': obs_start,  # Internal sorting key
+            'date': obs_date,
+            'heure_debut': obs_start_dt.strftime('%H:%M'),
+            'heure_fin': obs_end_dt.strftime('%H:%M'),
+            'task_name': obs.get('title', obs.get('originalData', {}).get('TITRE', 'Temps mort')),
+            'task_id': '',
+            'type': 'temps_mort',
+            'duration_min': obs_end - obs_start,
+            'pomodoro_index': '',
+            'pomodoro_total': '',
+            'rescheduled': False
+        })
+
+    # Trier par _minuteOffset, puis par type (temps_mort d'abord si même offset)
+    all_items.sort(key=lambda x: (x['_minuteOffset'], 0 if x['type'] == 'temps_mort' else 1))
+
+    # Supprimer la clé interne _minuteOffset avant de retourner
+    for item in all_items:
+        del item['_minuteOffset']
+
+    return all_items
 
 
 def calculate_statistics(timeline: List[Dict]) -> Dict:

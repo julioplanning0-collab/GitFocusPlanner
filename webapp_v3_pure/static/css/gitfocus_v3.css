@@ -24,13 +24,13 @@
     --white: #ffffff;
     --bg-body: #f5f5f5;
 
-    /* Type Colors */
-    --color-pomodoro: #e74c3c;
-    --color-pause: #3498db;
-    --color-calin: #2ecc71;
-    --color-clope: #f39c12;
-    --color-recurrent: #9b59b6;
-    --color-obstacle: #34495e;
+    /* Type Colors - Ultra vibrant palette */
+    --color-pomodoro: #ff0844;      /* Rouge néon - Pomodoro (travail) */
+    --color-pause: #00d2d3;          /* Cyan électrique - Pauses (récurrentes) */
+    --color-calin: #00ff88;          /* Vert fluo - Câlins */
+    --color-clope: #ff9500;          /* Orange intense - Clopes */
+    --color-recurrent: #8b5cf6;      /* Violet vif - Récurrentes */
+    --color-obstacle: #6b7280;       /* Gris - Temps morts (obstacles) */
 
     /* Spacing */
     --spacing-xs: 4px;
@@ -725,33 +725,39 @@ input:checked + .toggle-slider:before {
 
 .timeline-slot.type-pomodoro {
     border-left-color: var(--color-pomodoro);
-    background: rgba(231, 76, 60, 0.05);
+    background: rgba(255, 8, 68, 0.35);
+    border-left-width: 4px;
 }
 
 .timeline-slot.type-pause {
     border-left-color: var(--color-pause);
-    background: rgba(52, 152, 219, 0.05);
+    background: rgba(0, 210, 211, 0.35);
+    border-left-width: 4px;
 }
 
 .timeline-slot.type-calin {
     border-left-color: var(--color-calin);
-    background: rgba(46, 204, 113, 0.05);
+    background: rgba(0, 255, 136, 0.35);
+    border-left-width: 4px;
 }
 
 .timeline-slot.type-clope {
     border-left-color: var(--color-clope);
-    background: rgba(243, 156, 18, 0.05);
+    background: rgba(255, 149, 0, 0.35);
+    border-left-width: 4px;
 }
 
 .timeline-slot.type-recurrent {
     border-left-color: var(--color-recurrent);
-    background: rgba(155, 89, 182, 0.05);
+    background: rgba(139, 92, 246, 0.35);
+    border-left-width: 4px;
 }
 
 .timeline-slot.type-obstacle,
 .timeline-slot.type-temps_mort {
     border-left-color: var(--color-obstacle);
-    background: rgba(52, 73, 94, 0.05);
+    background: rgba(107, 114, 128, 0.30);
+    border-left-width: 4px;
 }
 
 .slot-time {
@@ -932,16 +938,21 @@ input:checked + .toggle-slider:before {
 
 /* Date Separator in Timeline */
 .timeline-date-separator {
-    background: var(--primary-color);
-    color: white;
-    padding: var(--spacing-sm);
-    font-weight: 600;
-    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
-    border-radius: var(--border-radius-sm);
+    background: #f0f4f8;
+    color: #2563eb;
+    padding: 12px 16px;
+    font-weight: 700;
+    font-size: 1.1rem;
+    margin: 20px 0 12px 0;
+    border-radius: 8px;
     text-align: center;
     position: sticky;
     top: 0;
-    z-index: 10;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    letter-spacing: 0.5px;
+    text-transform: capitalize;
+    border: 2px solid #2563eb;
 }
 
 .timeline-date-separator:first-child {

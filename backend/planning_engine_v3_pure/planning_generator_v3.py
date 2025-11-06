@@ -414,10 +414,17 @@ def generate_planning_v3(
 
     # === STEP 2: TIME CALCULATION ===
 
-    # Load temps morts and convert to obstacles
+    # Load temps morts for current day AND next day (planning can span midnight)
     temps_morts_csv = load_temps_morts(date)
+
+    # Also load next day's temps_morts
+    from datetime import timedelta as td
+    next_date = (datetime.strptime(date, '%Y-%m-%d') + td(days=1)).strftime('%Y-%m-%d')
+    temps_morts_next_day = load_temps_morts(next_date)
+    temps_morts_csv.extend(temps_morts_next_day)
+
     obstacles = convertTempsMortsToObstacles(temps_morts_csv, planning_start_time)
-    logger.info(f"Converted {len(temps_morts_csv)} temps morts to {len(obstacles)} obstacles")
+    logger.info(f"Converted {len(temps_morts_csv)} temps morts (including next day) to {len(obstacles)} obstacles")
 
     # Calculate minuteOffsets (STEP 2)
     final_tasks = calculate_timeline(ordered_tasks, obstacles, planning_start_minute=0)
