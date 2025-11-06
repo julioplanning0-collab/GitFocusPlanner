@@ -12,14 +12,12 @@ const state = {
 
     // Tasks data
     pomodoroTasks: [],
-    pauseTasks: [],
-    recurrentTasks: [],
+    recurrentTasks: [],       // All recurrent tasks (no pauses separation)
     obstacles: [],
 
     // User selections
     selectedPomodoroIds: [],       // ["TASK001", "TASK002"]
-    selectedPauseIds: [],          // ["REC001", "REC003", "REC001"] - ORDERED with duplicates
-    enabledRecurrentIds: [],       // ["REC006", "REC008"]
+    selectedRecurrentIds: [],      // ["REC001", "REC003", "REC001"] - ORDERED with duplicates (right panel)
 
     // Options
     calinEnabled: true,
@@ -30,7 +28,10 @@ const state = {
     currentPlanning: null,
 
     // Server status
-    serverOnline: false
+    serverOnline: false,
+
+    // Modal state
+    editingTaskId: null  // Task being edited in modal, null for new task
 };
 
 // ============================================
@@ -86,19 +87,6 @@ function setupEventListeners() {
         state.planningStartTime.setMinutes(minutes);
         console.log(`⏰ Planning start time updated: ${e.target.value}`);
     });
-
-    // Options checkboxes
-    document.getElementById('calinEnabled').addEventListener('change', (e) => {
-        state.calinEnabled = e.target.checked;
-    });
-
-    document.getElementById('clopeEnabled').addEventListener('change', (e) => {
-        state.clopeEnabled = e.target.checked;
-    });
-
-    document.getElementById('clopeInterval').addEventListener('change', (e) => {
-        state.clopeInterval = parseInt(e.target.value);
-    });
 }
 
 function switchTab(tabName) {
@@ -140,15 +128,13 @@ async function loadAllTasks() {
 
     try {
         // Load in parallel
-        const [pomodoroRes, pauseRes, recurrentRes, obstaclesRes] = await Promise.all([
+        const [pomodoroRes, recurrentRes, obstaclesRes] = await Promise.all([
             fetch('/api/v3/tasks/pomodoro'),
-            fetch('/api/v3/tasks/recurrent?pause_only=true'),
-            fetch('/api/v3/tasks/recurrent?exclude_pauses=true'),
+            fetch('/api/v3/tasks/recurrent'),  // Load ALL recurrent tasks (including pauses)
             fetch(`/api/v3/temps-morts?date=${state.currentDate}`)
         ]);
 
         const pomodoroData = await pomodoroRes.json();
-        const pauseData = await pauseRes.json();
         const recurrentData = await recurrentRes.json();
         const obstaclesData = await obstaclesRes.json();
 
@@ -158,15 +144,9 @@ async function loadAllTasks() {
             console.log(`✅ Loaded ${state.pomodoroTasks.length} Pomodoro tasks`);
         }
 
-        if (pauseData.success) {
-            state.pauseTasks = pauseData.tasks;
-            renderPauseTasks();
-            console.log(`✅ Loaded ${state.pauseTasks.length} Pause tasks`);
-        }
-
         if (recurrentData.success) {
             state.recurrentTasks = recurrentData.tasks;
-            renderRecurrentTasks();
+            renderRecurrentTasksGrouped();
             console.log(`✅ Loaded ${state.recurrentTasks.length} Recurrent tasks`);
         }
 
@@ -213,179 +193,181 @@ function renderPomodoroTasks() {
     document.getElementById('countPomodoro').textContent = state.selectedPomodoroIds.length;
 }
 
-function renderPauseTasks() {
-    const container = document.getElementById('pausesAvailable');
-
-    if (state.pauseTasks.length === 0) {
-        container.innerHTML = '<div class="empty-message">Aucune pause disponible</div>';
-        return;
-    }
-
-    container.innerHTML = state.pauseTasks.map(task => `
-        <div class="pause-item" draggable="true" data-id="${task.id}">
-            <div class="pause-item-info">
-                <div class="pause-item-name">${escapeHtml(task.name)}</div>
-                <div class="pause-item-duration">${task.duration} min</div>
-            </div>
-        </div>
-    `).join('');
-
-    // Setup drag & drop
-    setupDragAndDrop();
-}
-
-function renderRecurrentTasks() {
-    const container = document.getElementById('recurrentList');
+// Render LEFT panel: Available recurrent tasks (grouped by category)
+function renderRecurrentTasksGrouped() {
+    const container = document.getElementById('recurrentAvailable');
 
     if (state.recurrentTasks.length === 0) {
         container.innerHTML = '<div class="empty-message">Aucune tâche récurrente disponible</div>';
         return;
     }
 
-    container.innerHTML = state.recurrentTasks.map(task => `
-        <div class="task-item recurrent-item ${state.enabledRecurrentIds.includes(task.id) ? 'active' : ''}" data-id="${task.id}">
-            <label class="toggle-switch">
-                <input type="checkbox"
-                       ${state.enabledRecurrentIds.includes(task.id) ? 'checked' : ''}
-                       onchange="app.toggleRecurrent('${task.id}')">
-                <span class="toggle-slider"></span>
-            </label>
-            <div class="task-info">
-                <div class="task-name">${escapeHtml(task.name)}</div>
-                <div class="task-meta">
-                    <span class="task-duration">⏱️ ${task.duration} min</span>
-                    ${task.recurrence_type ? `<span class="task-category">🔁 ${task.recurrence_type}</span>` : ''}
+    // Group tasks by category
+    const tasksByCategory = {};
+    state.recurrentTasks.forEach(task => {
+        const category = task.category || 'Sans catégorie';
+        if (!tasksByCategory[category]) {
+            tasksByCategory[category] = [];
+        }
+        tasksByCategory[category].push(task);
+    });
+
+    // Sort categories alphabetically
+    const sortedCategories = Object.keys(tasksByCategory).sort();
+
+    // Render grouped tasks
+    container.innerHTML = sortedCategories.map(category => `
+        <div class="category-group">
+            <div class="category-header">${escapeHtml(category)}</div>
+            ${tasksByCategory[category].map(task => `
+                <div class="recurrent-task-item" data-id="${task.id}" onclick="app.addTaskToSelected('${task.id}')">
+                    <span class="recurrent-task-name">${escapeHtml(task.name)}</span>
+                    <span class="recurrent-task-duration">${task.duration}min</span>
+                    <button class="btn-edit" onclick="event.stopPropagation(); app.showEditTaskModal('${task.id}');" title="Modifier">✏️</button>
                 </div>
-            </div>
+            `).join('')}
         </div>
     `).join('');
 
-    document.getElementById('countRecurrent').textContent = state.enabledRecurrentIds.length;
+    document.getElementById('countRecurrent').textContent = state.recurrentTasks.length;
 }
 
-function renderSelectedPauses() {
-    const container = document.getElementById('pausesSelected');
+// Render RIGHT panel: Selected recurrent tasks (reorderable)
+function renderSelectedRecurrent() {
+    const container = document.getElementById('recurrentSelected');
 
-    if (state.selectedPauseIds.length === 0) {
+    if (state.selectedRecurrentIds.length === 0) {
         container.innerHTML = `
             <div class="empty-message">
-                Glissez les pauses ici pour construire votre séquence.
-                <br>Ordre important : les pauses seront insérées dans cet ordre.
+                Cliquez sur les tâches à gauche pour les ajouter.<br>
+                Glissez-déposez pour réordonner.
             </div>
         `;
         return;
     }
 
-    container.innerHTML = state.selectedPauseIds.map((pauseId, index) => {
-        const task = state.pauseTasks.find(t => t.id === pauseId);
+    container.innerHTML = state.selectedRecurrentIds.map((taskId, index) => {
+        const task = state.recurrentTasks.find(t => t.id === taskId);
         if (!task) return '';
 
         return `
-            <div class="pause-item" draggable="true" data-id="${pauseId}" data-index="${index}">
-                <div class="pause-item-info">
-                    <div class="pause-item-name">${index + 1}. ${escapeHtml(task.name)}</div>
-                    <div class="pause-item-duration">${task.duration} min</div>
-                </div>
-                <div class="pause-item-actions">
-                    <button class="btn-icon" onclick="app.removeSelectedPause(${index})" title="Retirer">❌</button>
-                </div>
+            <div class="selected-task-item" draggable="true" data-id="${taskId}" data-index="${index}">
+                <span class="drag-handle">☰</span>
+                <span class="selected-task-index">${index + 1}.</span>
+                <span class="selected-task-name">${escapeHtml(task.name)}</span>
+                <span class="selected-task-duration">${task.duration}min</span>
+                <button class="btn-remove" onclick="app.removeSelectedRecurrent(${index})" title="Retirer">❌</button>
             </div>
         `;
     }).join('');
 
-    document.getElementById('countPauses').textContent = state.selectedPauseIds.length;
     updateSelectionSummary();
 
-    // Re-setup drag & drop for selected zone
-    setupDragAndDrop();
+    // Setup drag & drop for reordering
+    setupRecurrentDragDrop();
 }
 
 // ============================================
-// DRAG & DROP (HTML5 API)
+// DRAG & DROP FOR RECURRENT REORDERING (RIGHT PANEL)
 // ============================================
-function setupDragAndDrop() {
-    const availableZone = document.getElementById('pausesAvailable');
-    const selectedZone = document.getElementById('pausesSelected');
+let draggedRecurrentItem = null;
+let draggedRecurrentIndex = null;
 
-    // Draggable items
-    document.querySelectorAll('.pause-item[draggable="true"]').forEach(item => {
-        item.addEventListener('dragstart', handleDragStart);
-        item.addEventListener('dragend', handleDragEnd);
-    });
+function setupRecurrentDragDrop() {
+    const items = document.querySelectorAll('#recurrentSelected .selected-task-item[draggable="true"]');
 
-    // Drop zones
-    [availableZone, selectedZone].forEach(zone => {
-        zone.addEventListener('dragover', handleDragOver);
-        zone.addEventListener('drop', handleDrop);
-        zone.addEventListener('dragleave', handleDragLeave);
+    items.forEach(item => {
+        item.addEventListener('dragstart', handleRecurrentDragStart);
+        item.addEventListener('dragend', handleRecurrentDragEnd);
+        item.addEventListener('dragover', handleRecurrentDragOver);
+        item.addEventListener('drop', handleRecurrentDrop);
     });
 }
 
-let draggedItem = null;
-let draggedFromZone = null;
+function handleRecurrentDragStart(e) {
+    draggedRecurrentItem = e.currentTarget;
+    draggedRecurrentIndex = parseInt(draggedRecurrentItem.dataset.index);
 
-function handleDragStart(e) {
-    draggedItem = e.target.closest('.pause-item');
-    draggedFromZone = e.target.closest('.drag-zone').id;
+    draggedRecurrentItem.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', draggedRecurrentIndex);
 
-    draggedItem.classList.add('dragging');
-    e.dataTransfer.effectAllowed = 'copy';
-    e.dataTransfer.setData('text/html', draggedItem.innerHTML);
-
-    console.log(`🎯 Drag start: ${draggedItem.dataset.id} from ${draggedFromZone}`);
+    console.log(`🎯 Drag start: index ${draggedRecurrentIndex}`);
 }
 
-function handleDragEnd(e) {
-    if (draggedItem) {
-        draggedItem.classList.remove('dragging');
+function handleRecurrentDragEnd(e) {
+    if (draggedRecurrentItem) {
+        draggedRecurrentItem.classList.remove('dragging');
     }
+
+    // Remove all drag-over classes
+    document.querySelectorAll('.selected-task-item').forEach(item => {
+        item.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+
+    draggedRecurrentItem = null;
+    draggedRecurrentIndex = null;
 }
 
-function handleDragOver(e) {
+function handleRecurrentDragOver(e) {
     e.preventDefault();
-    e.dataTransfer.dropEffect = 'copy';
+    e.dataTransfer.dropEffect = 'move';
 
-    const dropZone = e.currentTarget;
-    if (dropZone.id === 'pausesSelected') {
-        dropZone.classList.add('drag-over');
+    const targetItem = e.currentTarget;
+    if (targetItem === draggedRecurrentItem) return;
+
+    // Remove all drag-over classes first
+    document.querySelectorAll('.selected-task-item').forEach(item => {
+        item.classList.remove('drag-over-top', 'drag-over-bottom');
+    });
+
+    // Determine if dragging above or below middle
+    const rect = targetItem.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+
+    if (e.clientY < midpoint) {
+        targetItem.classList.add('drag-over-top');
+    } else {
+        targetItem.classList.add('drag-over-bottom');
     }
 }
 
-function handleDragLeave(e) {
-    const dropZone = e.currentTarget;
-    if (dropZone.id === 'pausesSelected') {
-        dropZone.classList.remove('drag-over');
-    }
-}
-
-function handleDrop(e) {
+function handleRecurrentDrop(e) {
     e.preventDefault();
 
-    const dropZone = e.currentTarget;
-    dropZone.classList.remove('drag-over');
+    const targetItem = e.currentTarget;
+    const targetIndex = parseInt(targetItem.dataset.index);
 
-    // Only allow drop on selected zone
-    if (dropZone.id !== 'pausesSelected') {
+    if (draggedRecurrentIndex === null || draggedRecurrentIndex === targetIndex) {
         return;
     }
 
-    if (!draggedItem) return;
+    // Determine drop position
+    const rect = targetItem.getBoundingClientRect();
+    const midpoint = rect.top + rect.height / 2;
+    const dropAbove = e.clientY < midpoint;
 
-    const pauseId = draggedItem.dataset.id;
-
-    // If dragged from selected zone (reordering)
-    if (draggedFromZone === 'pausesSelected') {
-        const oldIndex = parseInt(draggedItem.dataset.index);
-        // TODO: Implement reordering (would require drop position detection)
-        console.log('⚠️ Reordering not yet implemented');
-        return;
+    // Calculate new index
+    let newIndex = targetIndex;
+    if (!dropAbove && draggedRecurrentIndex < targetIndex) {
+        newIndex = targetIndex;
+    } else if (!dropAbove && draggedRecurrentIndex > targetIndex) {
+        newIndex = targetIndex + 1;
+    } else if (dropAbove && draggedRecurrentIndex > targetIndex) {
+        newIndex = targetIndex;
+    } else if (dropAbove && draggedRecurrentIndex < targetIndex) {
+        newIndex = targetIndex - 1;
     }
 
-    // Add to selected pauses (allows duplicates)
-    state.selectedPauseIds.push(pauseId);
-    renderSelectedPauses();
+    // Reorder array
+    const taskId = state.selectedRecurrentIds[draggedRecurrentIndex];
+    state.selectedRecurrentIds.splice(draggedRecurrentIndex, 1);
+    state.selectedRecurrentIds.splice(newIndex, 0, taskId);
 
-    console.log(`✅ Added pause ${pauseId} to selection`);
+    console.log(`✅ Reordered: moved index ${draggedRecurrentIndex} → ${newIndex}`);
+
+    // Re-render
+    renderSelectedRecurrent();
 }
 
 // ============================================
@@ -418,40 +400,82 @@ const app = {
         showToast('Sélection Pomodoro effacée', 'success');
     },
 
-    // Pause actions
-    removeSelectedPause(index) {
-        state.selectedPauseIds.splice(index, 1);
-        renderSelectedPauses();
+    // Recurrent actions (LEFT → RIGHT)
+    addTaskToSelected(taskId) {
+        // Allow duplicates (same task can be added multiple times)
+        state.selectedRecurrentIds.push(taskId);
+        renderSelectedRecurrent();
+        console.log(`✅ Added recurrent task ${taskId} to selection`);
     },
 
-    clearSelectedPauses() {
-        state.selectedPauseIds = [];
-        renderSelectedPauses();
-        showToast('Séquence de pauses effacée', 'success');
+    removeSelectedRecurrent(index) {
+        state.selectedRecurrentIds.splice(index, 1);
+        renderSelectedRecurrent();
+        console.log(`✅ Removed recurrent task at index ${index}`);
     },
 
-    // Recurrent actions
-    toggleRecurrent(taskId) {
-        const index = state.enabledRecurrentIds.indexOf(taskId);
-        if (index > -1) {
-            state.enabledRecurrentIds.splice(index, 1);
-        } else {
-            state.enabledRecurrentIds.push(taskId);
+    clearSelectedRecurrent() {
+        state.selectedRecurrentIds = [];
+        renderSelectedRecurrent();
+        showToast('Séquence de tâches récurrentes vidée', 'success');
+    },
+
+    // Modal actions
+    showAddTaskModal() {
+        state.editingTaskId = null;
+        document.getElementById('modalTitle').textContent = 'Ajouter une tâche récurrente';
+        document.getElementById('taskId').value = '';
+        document.getElementById('taskName').value = '';
+        document.getElementById('taskCategory').value = '';
+        document.getElementById('taskDescription').value = '';
+        document.getElementById('taskDuration').value = '5';
+
+        populateCategoryDatalist();
+
+        document.getElementById('taskModal').style.display = 'flex';
+    },
+
+    showEditTaskModal(taskId) {
+        state.editingTaskId = taskId;
+        const task = state.recurrentTasks.find(t => t.id === taskId);
+
+        if (!task) {
+            showToast('Tâche introuvable', 'error');
+            return;
         }
-        renderRecurrentTasks();
-        updateSelectionSummary();
+
+        document.getElementById('modalTitle').textContent = 'Modifier la tâche récurrente';
+        document.getElementById('taskId').value = task.id;
+        document.getElementById('taskName').value = task.name;
+        document.getElementById('taskCategory').value = task.category || '';
+        document.getElementById('taskDescription').value = task.description || '';
+        document.getElementById('taskDuration').value = task.duration;
+
+        populateCategoryDatalist();
+
+        document.getElementById('taskModal').style.display = 'flex';
     },
 
-    toggleAllRecurrent(enable) {
-        if (enable) {
-            state.enabledRecurrentIds = state.recurrentTasks.map(t => t.id);
-            showToast('Toutes les tâches récurrentes activées', 'success');
-        } else {
-            state.enabledRecurrentIds = [];
-            showToast('Toutes les tâches récurrentes désactivées', 'success');
+    closeTaskModal() {
+        document.getElementById('taskModal').style.display = 'none';
+        state.editingTaskId = null;
+    },
+
+    async saveTask() {
+        const name = document.getElementById('taskName').value.trim();
+        const category = document.getElementById('taskCategory').value.trim();
+        const description = document.getElementById('taskDescription').value.trim();
+        const duration = parseInt(document.getElementById('taskDuration').value);
+
+        if (!name || !category || duration < 1) {
+            showToast('Veuillez remplir tous les champs obligatoires', 'warning');
+            return;
         }
-        renderRecurrentTasks();
-        updateSelectionSummary();
+
+        // TODO: Implement API call to save task
+        console.log('⚠️ Save task not yet implemented (API endpoint needed)');
+        showToast('Fonctionnalité en cours de développement', 'warning');
+        app.closeTaskModal();
     },
 
     // Planning actions
@@ -464,18 +488,18 @@ const app = {
             return;
         }
 
-        if (state.selectedPauseIds.length === 0) {
-            showToast('Veuillez sélectionner au moins une pause', 'warning');
+        if (state.selectedRecurrentIds.length === 0) {
+            showToast('Veuillez sélectionner au moins une tâche récurrente (utilisée comme pause)', 'warning');
             return;
         }
 
-        // Prepare request
+        // Prepare request - selectedRecurrentIds serves as pause sequence
         const payload = {
             date: state.currentDate,
             planning_start_time: formatTime(state.planningStartTime),
             pomodoro_ids: state.selectedPomodoroIds,
-            pause_ids: state.selectedPauseIds,  // ORDERED with duplicates
-            recurrent_ids: state.enabledRecurrentIds,
+            pause_ids: state.selectedRecurrentIds,  // ORDERED with duplicates
+            recurrent_ids: [],  // Empty for now (no separate recurrent injection)
             calin_enabled: state.calinEnabled,
             clope_enabled: state.clopeEnabled,
             clope_interval_min: state.clopeInterval
@@ -639,11 +663,32 @@ function displayPlanning(data) {
 // ============================================
 function updateSelectionSummary() {
     const summary = document.getElementById('selectionSummary');
+
+    // Count pauses in selected recurrents
+    const pauseCount = state.selectedRecurrentIds.filter(id => {
+        const task = state.recurrentTasks.find(t => t.id === id);
+        return task && task.isPause;
+    }).length;
+
+    const recurrentCount = state.selectedRecurrentIds.length - pauseCount;
+
     summary.innerHTML = `
         <span>Pomodoros: <strong>${state.selectedPomodoroIds.length}</strong></span>
-        <span>Pauses: <strong>${state.selectedPauseIds.length}</strong></span>
-        <span>Récurrentes: <strong>${state.enabledRecurrentIds.length}</strong></span>
+        <span>Pauses: <strong>${pauseCount}</strong></span>
+        <span>Récurrentes: <strong>${recurrentCount}</strong></span>
     `;
+}
+
+function populateCategoryDatalist() {
+    const datalist = document.getElementById('categoriesList');
+
+    // Get unique categories from existing tasks
+    const categories = [...new Set(state.recurrentTasks.map(t => t.category).filter(Boolean))];
+    categories.sort();
+
+    datalist.innerHTML = categories.map(cat =>
+        `<option value="${escapeHtml(cat)}">`
+    ).join('');
 }
 
 function showToast(message, type = 'success') {
