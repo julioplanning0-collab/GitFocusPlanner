@@ -75,9 +75,14 @@
                     <div class="recurrent-panel recurrent-panel-right">
                         <div class="panel-header">
                             <h3>Séquence Sélectionnée</h3>
-                            <button class="btn btn-secondary btn-sm" onclick="app.clearSelectedRecurrent()">
-                                🗑️ Vider
-                            </button>
+                            <div class="panel-header-actions">
+                                <button class="btn btn-success btn-sm" onclick="app.sendToTimeline()" id="sendToTimelineBtn" disabled>
+                                    ⚡ Envoyer vers Planning
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="app.clearSelectedRecurrent()">
+                                    🗑️ Vider
+                                </button>
+                            </div>
                         </div>
                         <div id="recurrentSelected" class="recurrent-list-right">
                             <div class="empty-message">

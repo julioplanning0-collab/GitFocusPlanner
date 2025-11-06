@@ -911,6 +911,12 @@ input:checked + .toggle-slider:before {
     border-bottom: 1px solid var(--border-color);
 }
 
+.panel-header-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
 .recurrent-panel .panel-header h3 {
     margin: 0;
     font-size: 1.1rem;
@@ -1002,8 +1008,8 @@ input:checked + .toggle-slider:before {
 /* Selected Task Item (Right - Draggable) */
 .selected-task-item {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    gap: var(--spacing-sm);
     padding: var(--spacing-sm);
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
@@ -1016,6 +1022,37 @@ input:checked + .toggle-slider:before {
     opacity: 0.5;
 }
 
+.drag-handle {
+    color: var(--text-secondary);
+    cursor: grab;
+    font-size: 1rem;
+}
+
+.selected-task-item.dragging .drag-handle {
+    cursor: grabbing;
+}
+
+.selected-task-index {
+    min-width: 30px;
+    text-align: right;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.selected-task-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.selected-task-duration {
+    min-width: 50px;
+    text-align: right;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
 .selected-task-item .btn-remove {
     padding: 4px 8px;
     background: var(--danger-color);
@@ -1024,6 +1061,7 @@ input:checked + .toggle-slider:before {
     border-radius: var(--border-radius-sm);
     cursor: pointer;
     font-size: 0.85rem;
+    flex-shrink: 0;
 }
 
 /* ==================== MODAL ==================== */

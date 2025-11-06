@@ -235,6 +235,7 @@ function renderRecurrentTasksGrouped() {
 // Render RIGHT panel: Selected recurrent tasks (reorderable)
 function renderSelectedRecurrent() {
     const container = document.getElementById('recurrentSelected');
+    const sendBtn = document.getElementById('sendToTimelineBtn');
 
     if (state.selectedRecurrentIds.length === 0) {
         container.innerHTML = `
@@ -243,6 +244,8 @@ function renderSelectedRecurrent() {
                 Glissez-déposez pour réordonner.
             </div>
         `;
+        // Disable button when empty
+        if (sendBtn) sendBtn.disabled = true;
         return;
     }
 
@@ -260,6 +263,9 @@ function renderSelectedRecurrent() {
             </div>
         `;
     }).join('');
+
+    // Enable button when has items
+    if (sendBtn) sendBtn.disabled = false;
 
     updateSelectionSummary();
 
@@ -418,6 +424,22 @@ const app = {
         state.selectedRecurrentIds = [];
         renderSelectedRecurrent();
         showToast('Séquence de tâches récurrentes vidée', 'success');
+    },
+
+    sendToTimeline() {
+        if (state.selectedRecurrentIds.length === 0) {
+            showToast('Aucune tâche sélectionnée à envoyer', 'warning');
+            return;
+        }
+
+        // Switch to Pomodoro tab to trigger planning generation
+        switchTab('pomodoro');
+
+        // Scroll to planning section
+        setTimeout(() => {
+            showToast(`${state.selectedRecurrentIds.length} tâches envoyées vers le planning`, 'success');
+            console.log('📤 Tasks sent to timeline:', state.selectedRecurrentIds);
+        }, 300);
     },
 
     // Modal actions
