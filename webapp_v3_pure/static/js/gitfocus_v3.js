@@ -191,6 +191,9 @@ function renderPomodoroTasks() {
     `).join('');
 
     document.getElementById('countPomodoro').textContent = state.selectedPomodoroIds.length;
+
+    // Auto-generate timeline when selections change
+    autoGenerateTimeline();
 }
 
 // Render LEFT panel: Available recurrent tasks (grouped by category)
@@ -271,6 +274,9 @@ function renderSelectedRecurrent() {
 
     // Setup drag & drop for reordering
     setupRecurrentDragDrop();
+
+    // Auto-generate timeline when selections change
+    autoGenerateTimeline();
 }
 
 // ============================================
@@ -678,6 +684,185 @@ function displayPlanning(data) {
     }).join('');
 
     console.log(`✅ Planning displayed: ${data.planning.length} slots`);
+}
+
+// ============================================
+// AUTO-GENERATION TIMELINE DYNAMIQUE (POMODORO TAB)
+// ============================================
+
+// Debounce timer to avoid excessive API calls
+let timelineGenerationTimer = null;
+
+async function autoGenerateTimeline() {
+    // Clear previous timer
+    if (timelineGenerationTimer) {
+        clearTimeout(timelineGenerationTimer);
+    }
+
+    // Check if we have minimum required data
+    if (state.selectedPomodoroIds.length === 0 || state.selectedRecurrentIds.length === 0) {
+        showEmptyTimeline();
+        return;
+    }
+
+    // Debounce: wait 300ms before generating
+    timelineGenerationTimer = setTimeout(async () => {
+        console.log('🔄 Auto-generating timeline...');
+
+        const payload = {
+            date: state.currentDate,
+            planning_start_time: formatTime(state.planningStartTime),
+            pomodoro_ids: state.selectedPomodoroIds,
+            pause_ids: state.selectedRecurrentIds,  // ORDERED with duplicates
+            recurrent_ids: [],
+            calin_enabled: state.calinEnabled,
+            clope_enabled: state.clopeEnabled,
+            clope_interval_min: state.clopeInterval
+        };
+
+        try {
+            const response = await fetch('/api/v3/planning/generate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Erreur génération timeline');
+            }
+
+            if (data.success) {
+                state.currentPlanning = data.planning;
+                renderTimelineDynamic(data.planning, data.statistics);
+                console.log(`✅ Timeline auto-generated: ${data.planning.length} slots`);
+            } else {
+                throw new Error(data.error || 'Erreur inconnue');
+            }
+
+        } catch (error) {
+            console.error('❌ Auto-generation failed:', error);
+            showTimelineError(error.message);
+        }
+    }, 300);
+}
+
+function showEmptyTimeline() {
+    const container = document.getElementById('timelineDisplay');
+    const infoSpan = document.getElementById('timelineInfo');
+
+    container.innerHTML = `
+        <div class="empty-message">
+            La timeline s'affichera automatiquement<br>
+            quand vous sélectionnez des tâches.
+        </div>
+    `;
+
+    infoSpan.textContent = 'Sélectionnez des tâches';
+
+    // Disable export button
+    document.getElementById('exportBtn').disabled = true;
+}
+
+function showTimelineError(message) {
+    const container = document.getElementById('timelineDisplay');
+    const infoSpan = document.getElementById('timelineInfo');
+
+    container.innerHTML = `
+        <div class="empty-message" style="color: var(--error-color);">
+            ❌ Erreur lors de la génération<br>
+            ${escapeHtml(message)}
+        </div>
+    `;
+
+    infoSpan.textContent = 'Erreur';
+
+    // Disable export button
+    document.getElementById('exportBtn').disabled = true;
+}
+
+function renderTimelineDynamic(planning, statistics) {
+    const container = document.getElementById('timelineDisplay');
+    const infoSpan = document.getElementById('timelineInfo');
+
+    if (!planning || planning.length === 0) {
+        showEmptyTimeline();
+        return;
+    }
+
+    // Group slots by date
+    const byDate = {};
+    planning.forEach(slot => {
+        // Extract date from heure_debut (format: "HH:MM" or "YYYY-MM-DD HH:MM")
+        let date;
+        if (slot.date) {
+            date = slot.date;
+        } else if (slot.heure_debut && slot.heure_debut.includes(' ')) {
+            date = slot.heure_debut.split(' ')[0];
+        } else {
+            date = state.currentDate;
+        }
+
+        if (!byDate[date]) {
+            byDate[date] = [];
+        }
+        byDate[date].push(slot);
+    });
+
+    // Sort dates
+    const sortedDates = Object.keys(byDate).sort();
+
+    // Render timeline with date separators
+    let html = '';
+    sortedDates.forEach(date => {
+        // Add date separator (sticky header)
+        html += `<div class="timeline-date-separator">${formatDateFr(date)}</div>`;
+
+        // Add slots for this date
+        byDate[date].forEach(slot => {
+            const timeDisplay = slot.heure_debut && slot.heure_fin
+                ? `${slot.heure_debut} - ${slot.heure_fin}`
+                : `${slot.duration || '?'}min`;
+
+            html += `
+                <div class="timeline-slot type-${slot.type || 'unknown'}">
+                    <span class="slot-time">${timeDisplay}</span>
+                    <span class="slot-name">${escapeHtml(slot.task_name || slot.name || 'Tâche')}</span>
+                </div>
+            `;
+        });
+    });
+
+    container.innerHTML = html;
+
+    // Update info span
+    if (statistics) {
+        const start = statistics.planning_start || '?';
+        const end = statistics.planning_end || '?';
+        infoSpan.textContent = `${planning.length} slots, de ${start} à ${end}`;
+    } else {
+        infoSpan.textContent = `${planning.length} slots`;
+    }
+
+    // Enable export button
+    document.getElementById('exportBtn').disabled = false;
+}
+
+function formatDateFr(dateStr) {
+    // Convert YYYY-MM-DD to "Lundi 6 novembre 2025"
+    const date = new Date(dateStr + 'T12:00:00');  // Force midday to avoid timezone issues
+
+    const options = {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    };
+
+    const formatted = date.toLocaleDateString('fr-FR', options);
+    // Capitalize first letter
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
 }
 
 // ============================================
