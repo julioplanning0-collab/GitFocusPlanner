@@ -3,321 +3,172 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GitFocus V3 Pure - Timeline Linear</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: #f5f5f5;
-            padding: 20px;
-        }
-
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            padding: 30px;
-        }
-
-        h1 {
-            color: #2c3e50;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .badge {
-            background: #3498db;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 12px;
-            font-size: 12px;
-            font-weight: normal;
-        }
-
-        .status {
-            display: flex;
-            gap: 15px;
-            margin: 20px 0;
-            padding: 15px;
-            background: #ecf0f1;
-            border-radius: 6px;
-        }
-
-        .status-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #95a5a6;
-        }
-
-        .status-dot.online {
-            background: #2ecc71;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        .section {
-            margin: 30px 0;
-        }
-
-        h2 {
-            color: #34495e;
-            margin-bottom: 15px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #3498db;
-        }
-
-        .test-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 15px;
-            margin-top: 15px;
-        }
-
-        .test-card {
-            border: 1px solid #ddd;
-            border-radius: 6px;
-            padding: 15px;
-            background: #fafafa;
-        }
-
-        .test-card h3 {
-            color: #2c3e50;
-            font-size: 14px;
-            margin-bottom: 10px;
-        }
-
-        .test-card .endpoint {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            color: #7f8c8d;
-            margin-bottom: 10px;
-            word-break: break-all;
-        }
-
-        .btn {
-            background: #3498db;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: background 0.2s;
-        }
-
-        .btn:hover {
-            background: #2980b9;
-        }
-
-        .btn:disabled {
-            background: #95a5a6;
-            cursor: not-allowed;
-        }
-
-        .result {
-            margin-top: 10px;
-            padding: 10px;
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 11px;
-            max-height: 200px;
-            overflow-y: auto;
-            display: none;
-        }
-
-        .result.show {
-            display: block;
-        }
-
-        .result.success {
-            border-color: #2ecc71;
-            background: #e8f8f5;
-        }
-
-        .result.error {
-            border-color: #e74c3c;
-            background: #fadbd8;
-        }
-
-        .info-box {
-            background: #e8f4f8;
-            border-left: 4px solid #3498db;
-            padding: 15px;
-            margin: 20px 0;
-            border-radius: 4px;
-        }
-
-        .info-box h3 {
-            color: #2980b9;
-            margin-bottom: 10px;
-        }
-
-        .info-box ul {
-            margin-left: 20px;
-        }
-
-        .info-box li {
-            margin: 5px 0;
-            color: #34495e;
-        }
-
-        code {
-            background: #34495e;
-            color: #ecf0f1;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 12px;
-        }
-    </style>
+    <title>GitFocus V3 Pure - Planning Pomodoro</title>
+    <link rel="stylesheet" href="/static/css/gitfocus_v3.css">
 </head>
 <body>
     <div class="container">
-        <h1>
-            GitFocus V3 Pure
-            <span class="badge">Timeline Linear</span>
-        </h1>
-
-        <div class="status">
-            <div class="status-item">
-                <div class="status-dot" id="statusDot"></div>
-                <span id="statusText">Checking server...</span>
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1>GitFocus V3 Pure</h1>
+                <span class="badge badge-v3">Timeline Linear</span>
+                <span class="status-dot" id="statusDot"></span>
+                <span id="statusText" class="status-text">Checking...</span>
             </div>
-            <div class="status-item">
-                <span>Port: <strong>5001</strong></span>
-            </div>
-            <div class="status-item">
-                <span>Architecture: <strong>2-Step (ORDERING → TIME CALCULATION)</strong></span>
-            </div>
-        </div>
-
-        <div class="info-box">
-            <h3>📋 Phase 6 - Backend Complete</h3>
-            <ul>
-                <li>✅ Backend V3 Pure: Types, Timeline Calculator, Planning Generator, Data Loader/Writer</li>
-                <li>✅ API REST: 6 endpoints (tasks, planning/generate, planning/export)</li>
-                <li>✅ Tests Guards: 7 tests anti-dérive (tous passent)</li>
-                <li>⏳ Frontend: HTML/JS avec drag & drop (Phase 7 - à venir)</li>
-            </ul>
-        </div>
-
-        <div class="section">
-            <h2>🔍 Test API Endpoints</h2>
-
-            <div class="test-grid">
-                <div class="test-card">
-                    <h3>Health Check</h3>
-                    <div class="endpoint">GET /api/v3/health</div>
-                    <button class="btn" onclick="testEndpoint('/api/v3/health', 'health')">Test</button>
-                    <div class="result" id="result-health"></div>
-                </div>
-
-                <div class="test-card">
-                    <h3>Pomodoro Tasks</h3>
-                    <div class="endpoint">GET /api/v3/tasks/pomodoro</div>
-                    <button class="btn" onclick="testEndpoint('/api/v3/tasks/pomodoro', 'pomodoro')">Test</button>
-                    <div class="result" id="result-pomodoro"></div>
-                </div>
-
-                <div class="test-card">
-                    <h3>Pause Tasks (IS_PAUSE=1)</h3>
-                    <div class="endpoint">GET /api/v3/tasks/recurrent?pause_only=true</div>
-                    <button class="btn" onclick="testEndpoint('/api/v3/tasks/recurrent?pause_only=true', 'pauses')">Test</button>
-                    <div class="result" id="result-pauses"></div>
-                </div>
-
-                <div class="test-card">
-                    <h3>Recurrent Tasks (IS_PAUSE=0)</h3>
-                    <div class="endpoint">GET /api/v3/tasks/recurrent?exclude_pauses=true</div>
-                    <button class="btn" onclick="testEndpoint('/api/v3/tasks/recurrent?exclude_pauses=true', 'recurrent')">Test</button>
-                    <div class="result" id="result-recurrent"></div>
-                </div>
-
-                <div class="test-card">
-                    <h3>Temps Morts (Obstacles)</h3>
-                    <div class="endpoint">GET /api/v3/temps-morts?date=2025-11-06</div>
-                    <button class="btn" onclick="testEndpoint('/api/v3/temps-morts?date=2025-11-06', 'obstacles')">Test</button>
-                    <div class="result" id="result-obstacles"></div>
-                </div>
-
-                <div class="test-card">
-                    <h3>All Recurrent Tasks</h3>
-                    <div class="endpoint">GET /api/v3/tasks/recurrent</div>
-                    <button class="btn" onclick="testEndpoint('/api/v3/tasks/recurrent', 'all-recurrent')">Test</button>
-                    <div class="result" id="result-all-recurrent"></div>
+            <div class="header-right">
+                <div class="planning-time">
+                    <label for="planningStartTime">Heure début planning:</label>
+                    <input type="time" id="planningStartTime" step="300">
+                    <span class="time-helper">(now + 15min)</span>
                 </div>
             </div>
-        </div>
+        </header>
 
-        <div class="info-box">
-            <h3>ℹ️ Notes</h3>
-            <ul>
-                <li>Les endpoints <code>POST</code> nécessitent des données (planning/generate, planning/export)</li>
-                <li>Les fichiers CSV doivent exister dans <code>data/prod_data/</code></li>
-                <li>Si les tests échouent, vérifier que les CSV V3 sont présents</li>
-                <li>Frontend complet (drag & drop) sera implémenté en Phase 7</li>
-            </ul>
-        </div>
+        <!-- Tabs Navigation -->
+        <nav class="tabs">
+            <button class="tab-btn active" data-tab="pomodoro">
+                <span class="tab-icon">🍅</span>
+                <span>Pomodoro</span>
+                <span class="tab-count" id="countPomodoro">0</span>
+            </button>
+            <button class="tab-btn" data-tab="pauses">
+                <span class="tab-icon">⏸️</span>
+                <span>Pauses</span>
+                <span class="tab-count" id="countPauses">0</span>
+            </button>
+            <button class="tab-btn" data-tab="recurrent">
+                <span class="tab-icon">🔄</span>
+                <span>Récurrentes</span>
+                <span class="tab-count" id="countRecurrent">0</span>
+            </button>
+        </nav>
+
+        <!-- Tab Content -->
+        <main class="tab-content">
+            <!-- Tab 1: Pomodoro Tasks -->
+            <section class="tab-pane active" id="tab-pomodoro">
+                <div class="pane-header">
+                    <h2>Tâches Pomodoro</h2>
+                    <div class="pane-actions">
+                        <button class="btn btn-secondary" onclick="app.selectAllPomodoros()">Tout sélectionner</button>
+                        <button class="btn btn-secondary" onclick="app.clearPomodoros()">Tout désélectionner</button>
+                    </div>
+                </div>
+                <div id="pomodoroList" class="task-list">
+                    <div class="loading">Chargement des tâches Pomodoro...</div>
+                </div>
+            </section>
+
+            <!-- Tab 2: Pauses (Drag & Drop) -->
+            <section class="tab-pane" id="tab-pauses">
+                <div class="pane-header">
+                    <h2>Pauses (Drag & Drop)</h2>
+                    <p class="pane-description">
+                        Glissez les pauses vers la zone de sélection pour construire votre séquence.
+                        Vous pouvez dupliquer et réorganiser librement.
+                    </p>
+                </div>
+
+                <div class="drag-drop-container">
+                    <!-- Available Pauses -->
+                    <div class="drag-panel">
+                        <h3>Pauses Disponibles</h3>
+                        <div id="pausesAvailable" class="drag-zone drag-zone-source">
+                            <div class="loading">Chargement des pauses...</div>
+                        </div>
+                    </div>
+
+                    <!-- Selected Pauses (Ordered) -->
+                    <div class="drag-panel drag-panel-selected">
+                        <div class="panel-header">
+                            <h3>Séquence Sélectionnée</h3>
+                            <button class="btn btn-sm btn-secondary" onclick="app.clearSelectedPauses()">
+                                🗑️ Vider
+                            </button>
+                        </div>
+                        <div id="pausesSelected" class="drag-zone drag-zone-target">
+                            <div class="empty-message">
+                                Glissez les pauses ici pour construire votre séquence.
+                                <br>Ordre important : les pauses seront insérées dans cet ordre.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pause-options">
+                    <div class="option-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="calinEnabled" checked>
+                            <span>Insérer Câlins (5min, tous les 2 pauses)</span>
+                        </label>
+                    </div>
+                    <div class="option-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="clopeEnabled">
+                            <span>Insérer Clopes (25min, tous les</span>
+                        </label>
+                        <input type="number" id="clopeInterval" min="60" max="300" value="120" step="30" class="input-sm">
+                        <span>min de travail)</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tab 3: Recurrent Tasks -->
+            <section class="tab-pane" id="tab-recurrent">
+                <div class="pane-header">
+                    <h2>Tâches Récurrentes</h2>
+                    <p class="pane-description">
+                        Activez les tâches récurrentes à inclure dans le planning (hors pauses).
+                    </p>
+                    <div class="pane-actions">
+                        <button class="btn btn-secondary" onclick="app.toggleAllRecurrent(true)">Tout activer</button>
+                        <button class="btn btn-secondary" onclick="app.toggleAllRecurrent(false)">Tout désactiver</button>
+                    </div>
+                </div>
+                <div id="recurrentList" class="task-list">
+                    <div class="loading">Chargement des tâches récurrentes...</div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Actions -->
+        <footer class="actions-bar">
+            <div class="actions-left">
+                <button class="btn btn-primary btn-large" id="generateBtn" onclick="app.generatePlanning()">
+                    ⚡ Générer Planning
+                </button>
+                <button class="btn btn-success btn-large" id="exportBtn" onclick="app.exportPlanning()" disabled>
+                    💾 Export CSV
+                </button>
+            </div>
+            <div class="actions-right">
+                <div class="summary" id="selectionSummary">
+                    <span>Pomodoros: <strong>0</strong></span>
+                    <span>Pauses: <strong>0</strong></span>
+                    <span>Récurrentes: <strong>0</strong></span>
+                </div>
+            </div>
+        </footer>
+
+        <!-- Planning Display -->
+        <section class="planning-section" id="planningSection" style="display: none;">
+            <div class="section-header">
+                <h2>Planning Généré</h2>
+                <button class="btn btn-secondary btn-sm" onclick="app.hidePlanning()">Masquer</button>
+            </div>
+
+            <div class="planning-stats" id="planningStats"></div>
+
+            <div class="timeline-container">
+                <div id="timelineDisplay" class="timeline"></div>
+            </div>
+        </section>
+
+        <!-- Notification Toast -->
+        <div id="toast" class="toast"></div>
     </div>
 
-    <script>
-        // Check server status on load
-        window.addEventListener('load', checkServerStatus);
-
-        async function checkServerStatus() {
-            try {
-                const response = await fetch('/api/v3/health');
-                const data = await response.json();
-
-                if (data.success) {
-                    document.getElementById('statusDot').classList.add('online');
-                    document.getElementById('statusText').textContent = `Server online - ${data.service} v${data.version}`;
-                } else {
-                    throw new Error('Server returned error');
-                }
-            } catch (error) {
-                document.getElementById('statusText').textContent = 'Server offline or error';
-            }
-        }
-
-        async function testEndpoint(url, resultId) {
-            const resultDiv = document.getElementById(`result-${resultId}`);
-            resultDiv.textContent = 'Loading...';
-            resultDiv.className = 'result show';
-
-            try {
-                const response = await fetch(url);
-                const data = await response.json();
-
-                resultDiv.className = 'result show success';
-                resultDiv.textContent = JSON.stringify(data, null, 2);
-
-            } catch (error) {
-                resultDiv.className = 'result show error';
-                resultDiv.textContent = `Error: ${error.message}`;
-            }
-        }
-    </script>
+    <script src="/static/js/gitfocus_v3.js"></script>
 </body>
 </html>
