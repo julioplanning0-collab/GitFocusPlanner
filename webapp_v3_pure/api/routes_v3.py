@@ -167,9 +167,8 @@ def get_temps_morts():
             return _error_response("Invalid date format. Use YYYY-MM-DD")
 
         data_dir = _get_data_dir()
-        csv_path = data_dir / 'temps_morts.csv'
 
-        temps_morts = load_temps_morts(csv_path, date_str)
+        temps_morts = load_temps_morts(date_str)
 
         return jsonify({
             'success': True,

@@ -31,7 +31,7 @@ def get_prod_data_path() -> Path:
     Get production data directory path.
 
     Returns:
-        Path to C:\Users\juli0\AndroidStudioProjects\GitFocus_2\prod_data\
+        Path to production data directory
     """
     # IMPORTANT: V3 uses same prod_data location as V2
     return Path(r"C:\Users\juli0\AndroidStudioProjects\GitFocus_2\prod_data")
