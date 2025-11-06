@@ -890,17 +890,26 @@ input:checked + .toggle-slider:before {
 .recurrent-container {
     display: flex;
     gap: var(--spacing-lg);
-    height: 500px;
+    height: 600px;  /* Plus haut pour plus d'espace vertical */
     margin-top: var(--spacing-md);
 }
 
 .recurrent-panel {
-    flex: 1;
     background: var(--bg-secondary);
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     display: flex;
     flex-direction: column;
+}
+
+/* LEFT panel: Plus grand (70% de l'espace) */
+.recurrent-panel-left {
+    flex: 0 0 70%;  /* Prend 70% de l'espace */
+}
+
+/* RIGHT panel: Plus petit (30% de l'espace) */
+.recurrent-panel-right {
+    flex: 0 0 28%;  /* Prend 28% de l'espace (avec gap = 30%) */
 }
 
 .recurrent-panel .panel-header {
@@ -925,7 +934,9 @@ input:checked + .toggle-slider:before {
 .recurrent-list-left, .recurrent-list-right {
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden;
     padding: var(--spacing-sm);
+    overscroll-behavior: contain;  /* Empêche propagation scroll */
 }
 
 /* Category Group */
@@ -942,19 +953,20 @@ input:checked + .toggle-slider:before {
     margin-bottom: var(--spacing-xs);
 }
 
-/* Recurrent Task Item (Left - Compact) */
+/* Recurrent Task Item (Left - Ultra Compact) */
 .recurrent-task-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: var(--spacing-xs) var(--spacing-sm);
+    padding: 4px 8px;  /* Padding ultra compact */
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-sm);
-    margin-bottom: var(--spacing-xs);
+    margin-bottom: 2px;  /* Marge minimale entre items */
     cursor: pointer;
     transition: all 0.2s;
-    min-height: 32px;
+    min-height: 24px;  /* Hauteur minimale réduite */
+    line-height: 1.2;  /* Line-height compact */
 }
 
 .recurrent-task-item:hover {
@@ -1005,17 +1017,19 @@ input:checked + .toggle-slider:before {
     border-color: var(--primary-color);
 }
 
-/* Selected Task Item (Right - Draggable) */
+/* Selected Task Item (Right - Draggable Ultra Compact) */
 .selected-task-item {
     display: flex;
     align-items: center;
-    gap: var(--spacing-sm);
-    padding: var(--spacing-sm);
+    gap: 6px;  /* Gap réduit */
+    padding: 4px 8px;  /* Padding ultra compact */
     background: var(--bg-primary);
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: 2px;  /* Marge minimale */
     cursor: move;
+    min-height: 24px;  /* Hauteur minimale réduite */
+    line-height: 1.2;  /* Line-height compact */
 }
 
 .selected-task-item.dragging {
