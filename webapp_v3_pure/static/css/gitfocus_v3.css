@@ -886,6 +886,115 @@ input:checked + .toggle-slider:before {
     }
 }
 
+/* ==================== POMODORO 2-COLUMNS LAYOUT ==================== */
+.pomodoro-container {
+    display: flex;
+    gap: var(--spacing-lg);
+    height: 600px;
+    margin-top: var(--spacing-md);
+}
+
+.pomodoro-panel {
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+}
+
+/* LEFT panel: Liste tâches (50%) */
+.pomodoro-panel-left {
+    flex: 0 0 50%;
+}
+
+/* RIGHT panel: Timeline dynamique (48%) */
+.pomodoro-panel-right {
+    flex: 0 0 48%;
+}
+
+.pomodoro-list-left, .timeline-display {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: var(--spacing-sm);
+    overscroll-behavior: contain;
+}
+
+.timeline-display {
+    background: var(--bg-primary);
+}
+
+.timeline-info {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-style: italic;
+}
+
+/* Date Separator in Timeline */
+.timeline-date-separator {
+    background: var(--primary-color);
+    color: white;
+    padding: var(--spacing-sm);
+    font-weight: 600;
+    margin: var(--spacing-md) 0 var(--spacing-sm) 0;
+    border-radius: var(--border-radius-sm);
+    text-align: center;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.timeline-date-separator:first-child {
+    margin-top: 0;
+}
+
+/* Timeline Slot */
+.timeline-slot {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: 4px 8px;
+    margin-bottom: 2px;
+    border-left: 3px solid;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-sm);
+    font-size: 0.9rem;
+    line-height: 1.2;
+    min-height: 24px;
+}
+
+.timeline-slot.type-pomodoro {
+    border-color: var(--success-color);
+}
+
+.timeline-slot.type-pause {
+    border-color: var(--warning-color);
+}
+
+.timeline-slot.type-recurrent {
+    border-color: var(--info-color);
+}
+
+.slot-time {
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 100px;
+    font-size: 0.85rem;
+}
+
+.slot-name {
+    flex: 1;
+    color: var(--text-primary);
+}
+
+.slot-badge {
+    font-size: 0.75rem;
+    padding: 2px 6px;
+    background: var(--primary-color);
+    color: white;
+    border-radius: var(--border-radius-sm);
+}
+
 /* ==================== RECURRENT 2-COLUMNS LAYOUT ==================== */
 .recurrent-container {
     display: flex;

@@ -41,20 +41,39 @@
 
         <!-- Tab Content -->
         <main class="tab-content">
-            <!-- Tab 1: Pomodoro Tasks -->
+            <!-- Tab 1: Pomodoro Tasks with Timeline -->
             <section class="tab-pane active" id="tab-pomodoro">
-                <div class="pane-header">
-                    <h2>Tâches Pomodoro</h2>
-                    <div class="pane-actions">
-                        <button class="btn btn-success" id="exportBtn" onclick="app.exportPlanning()" disabled>
-                            💾 Export CSV
-                        </button>
-                        <button class="btn btn-secondary" onclick="app.selectAllPomodoros()">Tout sélectionner</button>
-                        <button class="btn btn-secondary" onclick="app.clearPomodoros()">Tout désélectionner</button>
+                <div class="pomodoro-container">
+                    <!-- LEFT: Task Selection -->
+                    <div class="pomodoro-panel pomodoro-panel-left">
+                        <div class="panel-header">
+                            <h3>Tâches Pomodoro</h3>
+                            <div class="panel-header-actions">
+                                <button class="btn btn-success btn-sm" id="exportBtn" onclick="app.exportPlanning()" disabled>
+                                    💾 Export CSV
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick="app.selectAllPomodoros()">Tout sélectionner</button>
+                                <button class="btn btn-secondary btn-sm" onclick="app.clearPomodoros()">Tout désélectionner</button>
+                            </div>
+                        </div>
+                        <div id="pomodoroList" class="pomodoro-list-left">
+                            <div class="loading">Chargement des tâches Pomodoro...</div>
+                        </div>
                     </div>
-                </div>
-                <div id="pomodoroList" class="task-list">
-                    <div class="loading">Chargement des tâches Pomodoro...</div>
+
+                    <!-- RIGHT: Dynamic Timeline -->
+                    <div class="pomodoro-panel pomodoro-panel-right">
+                        <div class="panel-header">
+                            <h3>Timeline Dynamique</h3>
+                            <span class="timeline-info" id="timelineInfo">Sélectionnez des tâches</span>
+                        </div>
+                        <div id="timelineDisplay" class="timeline-display">
+                            <div class="empty-message">
+                                La timeline s'affichera automatiquement<br>
+                                quand vous sélectionnez des tâches.
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </section>
 
