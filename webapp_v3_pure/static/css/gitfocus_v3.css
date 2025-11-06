@@ -902,14 +902,14 @@ input:checked + .toggle-slider:before {
     flex-direction: column;
 }
 
-/* LEFT panel: Plus grand (70% de l'espace) */
+/* LEFT panel: Largeur réduite (50% de l'espace) */
 .recurrent-panel-left {
-    flex: 0 0 70%;  /* Prend 70% de l'espace */
+    flex: 0 0 50%;  /* Prend 50% de l'espace */
 }
 
-/* RIGHT panel: Plus petit (30% de l'espace) */
+/* RIGHT panel: Plus grand (48% de l'espace) */
 .recurrent-panel-right {
-    flex: 0 0 28%;  /* Prend 28% de l'espace (avec gap = 30%) */
+    flex: 0 0 48%;  /* Prend 48% de l'espace (avec gap = 50%) */
 }
 
 .recurrent-panel .panel-header {
