@@ -46,6 +46,9 @@
                 <div class="pane-header">
                     <h2>Tâches Pomodoro</h2>
                     <div class="pane-actions">
+                        <button class="btn btn-success" id="exportBtn" onclick="app.exportPlanning()" disabled>
+                            💾 Export CSV
+                        </button>
                         <button class="btn btn-secondary" onclick="app.selectAllPomodoros()">Tout sélectionner</button>
                         <button class="btn btn-secondary" onclick="app.clearPomodoros()">Tout désélectionner</button>
                     </div>
@@ -94,25 +97,6 @@
                 </div>
             </section>
         </main>
-
-        <!-- Actions -->
-        <footer class="actions-bar">
-            <div class="actions-left">
-                <button class="btn btn-primary btn-large" id="generateBtn" onclick="app.generatePlanning()">
-                    ⚡ Générer Planning
-                </button>
-                <button class="btn btn-success btn-large" id="exportBtn" onclick="app.exportPlanning()" disabled>
-                    💾 Export CSV
-                </button>
-            </div>
-            <div class="actions-right">
-                <div class="summary" id="selectionSummary">
-                    <span>Pomodoros: <strong>0</strong></span>
-                    <span>Pauses: <strong>0</strong></span>
-                    <span>Récurrentes: <strong>0</strong></span>
-                </div>
-            </div>
-        </footer>
 
         <!-- Planning Display -->
         <section class="planning-section" id="planningSection" style="display: none;">
