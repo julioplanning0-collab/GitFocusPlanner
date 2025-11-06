@@ -32,11 +32,6 @@
                 <span>Pomodoro</span>
                 <span class="tab-count" id="countPomodoro">0</span>
             </button>
-            <button class="tab-btn" data-tab="pauses">
-                <span class="tab-icon">⏸️</span>
-                <span>Pauses</span>
-                <span class="tab-count" id="countPauses">0</span>
-            </button>
             <button class="tab-btn" data-tab="recurrent">
                 <span class="tab-icon">🔄</span>
                 <span>Récurrentes</span>
@@ -60,74 +55,37 @@
                 </div>
             </section>
 
-            <!-- Tab 2: Pauses (Drag & Drop) -->
-            <section class="tab-pane" id="tab-pauses">
-                <div class="pane-header">
-                    <h2>Pauses (Drag & Drop)</h2>
-                    <p class="pane-description">
-                        Glissez les pauses vers la zone de sélection pour construire votre séquence.
-                        Vous pouvez dupliquer et réorganiser librement.
-                    </p>
-                </div>
-
-                <div class="drag-drop-container">
-                    <!-- Available Pauses -->
-                    <div class="drag-panel">
-                        <h3>Pauses Disponibles</h3>
-                        <div id="pausesAvailable" class="drag-zone drag-zone-source">
-                            <div class="loading">Chargement des pauses...</div>
+            <!-- Tab 2: Recurrent Tasks (2 Columns) -->
+            <section class="tab-pane" id="tab-recurrent">
+                <div class="recurrent-container">
+                    <!-- Left Panel: Available Tasks (Grouped by Category) -->
+                    <div class="recurrent-panel recurrent-panel-left">
+                        <div class="panel-header">
+                            <h3>Tâches Disponibles</h3>
+                            <button class="btn btn-primary btn-sm" onclick="app.showAddTaskModal()">
+                                ➕ Ajouter
+                            </button>
+                        </div>
+                        <div id="recurrentAvailable" class="recurrent-list-left">
+                            <div class="loading">Chargement des tâches récurrentes...</div>
                         </div>
                     </div>
 
-                    <!-- Selected Pauses (Ordered) -->
-                    <div class="drag-panel drag-panel-selected">
+                    <!-- Right Panel: Selected Tasks (Drag & Drop Reorder) -->
+                    <div class="recurrent-panel recurrent-panel-right">
                         <div class="panel-header">
                             <h3>Séquence Sélectionnée</h3>
-                            <button class="btn btn-sm btn-secondary" onclick="app.clearSelectedPauses()">
+                            <button class="btn btn-secondary btn-sm" onclick="app.clearSelectedRecurrent()">
                                 🗑️ Vider
                             </button>
                         </div>
-                        <div id="pausesSelected" class="drag-zone drag-zone-target">
+                        <div id="recurrentSelected" class="recurrent-list-right">
                             <div class="empty-message">
-                                Glissez les pauses ici pour construire votre séquence.
-                                <br>Ordre important : les pauses seront insérées dans cet ordre.
+                                Cliquez sur les tâches à gauche pour les ajouter.<br>
+                                Glissez-déposez pour réordonner.
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <div class="pause-options">
-                    <div class="option-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="calinEnabled" checked>
-                            <span>Insérer Câlins (5min, tous les 2 pauses)</span>
-                        </label>
-                    </div>
-                    <div class="option-group">
-                        <label class="checkbox-label">
-                            <input type="checkbox" id="clopeEnabled">
-                            <span>Insérer Clopes (25min, tous les</span>
-                        </label>
-                        <input type="number" id="clopeInterval" min="60" max="300" value="120" step="30" class="input-sm">
-                        <span>min de travail)</span>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Tab 3: Recurrent Tasks -->
-            <section class="tab-pane" id="tab-recurrent">
-                <div class="pane-header">
-                    <h2>Tâches Récurrentes</h2>
-                    <p class="pane-description">
-                        Activez les tâches récurrentes à inclure dans le planning (hors pauses).
-                    </p>
-                    <div class="pane-actions">
-                        <button class="btn btn-secondary" onclick="app.toggleAllRecurrent(true)">Tout activer</button>
-                        <button class="btn btn-secondary" onclick="app.toggleAllRecurrent(false)">Tout désactiver</button>
-                    </div>
-                </div>
-                <div id="recurrentList" class="task-list">
-                    <div class="loading">Chargement des tâches récurrentes...</div>
                 </div>
             </section>
         </main>
@@ -167,6 +125,46 @@
 
         <!-- Notification Toast -->
         <div id="toast" class="toast"></div>
+
+        <!-- Modal: Add/Edit Recurrent Task -->
+        <div id="taskModal" class="modal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 id="modalTitle">Ajouter une tâche récurrente</h3>
+                    <button class="modal-close" onclick="app.closeTaskModal()">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="taskForm">
+                        <input type="hidden" id="taskId" value="">
+
+                        <div class="form-group">
+                            <label for="taskName">Nom de la tâche *</label>
+                            <input type="text" id="taskName" class="form-control" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="taskCategory">Catégorie *</label>
+                            <input type="text" id="taskCategory" class="form-control" list="categoriesList" required>
+                            <datalist id="categoriesList"></datalist>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="taskDescription">Description</label>
+                            <textarea id="taskDescription" class="form-control" rows="3"></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="taskDuration">Durée (minutes) *</label>
+                            <input type="number" id="taskDuration" class="form-control" min="1" max="300" value="5" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="app.closeTaskModal()">Annuler</button>
+                    <button class="btn btn-primary" onclick="app.saveTask()">Enregistrer</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/static/js/gitfocus_v3.js"></script>

@@ -69,6 +69,7 @@ def get_pomodoro_tasks():
 
     Returns:
         JSON: {success: true, tasks: [...]}
+        Each task: {id, name, duration, category, status, description}
 
     Example:
         GET /api/v3/tasks/pomodoro
@@ -79,7 +80,20 @@ def get_pomodoro_tasks():
 
         # Load all pomodoro tasks (no ID filter)
         from backend.planning_engine_v3_pure.data_loader_v3 import load_all_pomodoro_tasks
-        tasks = load_all_pomodoro_tasks(csv_path)
+        raw_tasks = load_all_pomodoro_tasks(csv_path)
+
+        # Transform CSV format → Frontend format
+        tasks = [
+            {
+                'id': task['CODE_TACHE'],
+                'name': task['NOM_TACHE'],
+                'duration': int(task['DUREE_MIN']),
+                'category': task.get('CATEGORIE', ''),
+                'status': task.get('STATUS', ''),
+                'description': task.get('DESCRIPTION', '')
+            }
+            for task in raw_tasks
+        ]
 
         return jsonify({
             'success': True,
@@ -119,15 +133,29 @@ def get_recurrent_tasks():
 
         # Load all recurrent tasks
         from backend.planning_engine_v3_pure.data_loader_v3 import load_all_recurrent_tasks
-        all_tasks = load_all_recurrent_tasks(csv_path)
+        raw_tasks = load_all_recurrent_tasks(csv_path)
 
         # Filter by IS_PAUSE
         if pause_only:
-            tasks = [t for t in all_tasks if t.get('IS_PAUSE') == '1']
+            filtered_tasks = [t for t in raw_tasks if t.get('IS_PAUSE') == '1']
         elif exclude_pauses:
-            tasks = [t for t in all_tasks if t.get('IS_PAUSE') == '0']
+            filtered_tasks = [t for t in raw_tasks if t.get('IS_PAUSE') == '0']
         else:
-            tasks = all_tasks
+            filtered_tasks = raw_tasks
+
+        # Transform CSV format → Frontend format
+        tasks = [
+            {
+                'id': task['CODE_RECURRENCE'],
+                'name': task['NOM_TACHE'],
+                'duration': int(task['DUREE_MIN']),
+                'category': task.get('CATEGORIE', ''),
+                'description': task.get('DESCRIPTION', ''),
+                'isPause': task.get('IS_PAUSE') == '1',
+                'isActive': task.get('IS_ACTIVE') == '1'
+            }
+            for task in filtered_tasks
+        ]
 
         return jsonify({
             'success': True,

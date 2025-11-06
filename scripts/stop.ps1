@@ -1,5 +1,5 @@
 # GitFocus Planner - Script d'arret PowerShell
-# Arrete TOUS les processus Python et libere le port 5000
+# Arrete TOUS les processus Python et libere les ports 5000 (V2) et 5001 (V3)
 
 Write-Host ""
 Write-Host "========================================"
@@ -95,14 +95,15 @@ if ($countAfter -gt 0) {
     Write-Host "[OK] Tous les processus Python ont ete arretes!" -ForegroundColor Green
 }
 
-# ETAPE 4: Verification du port 5000
+# ETAPE 4: Verification des ports 5000 (V2) et 5001 (V3)
 Write-Host ""
 Write-Host "========================================"
-Write-Host " VERIFICATION PORT 5000"
+Write-Host " VERIFICATION PORTS"
 Write-Host "========================================"
-Write-Host ""
-Write-Host "[INFO] Verification du port 5000..."
 
+# Port 5000 (V2)
+Write-Host ""
+Write-Host "[INFO] Verification du port 5000 (V2)..."
 $port5000 = Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue
 
 if ($port5000) {
@@ -125,9 +126,7 @@ if ($port5000) {
         }
     }
 
-    Write-Host ""
-    Write-Host "[ATTENTE] 5 secondes pour liberation du port..."
-    Start-Sleep -Seconds 5
+    Start-Sleep -Seconds 2
 
     # Verification finale
     $port5000Final = Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue
@@ -145,6 +144,51 @@ if ($port5000) {
     }
 } else {
     Write-Host "[OK] Port 5000 libre!" -ForegroundColor Green
+}
+
+# Port 5001 (V3)
+Write-Host ""
+Write-Host "[INFO] Verification du port 5001 (V3)..."
+$port5001 = Get-NetTCPConnection -LocalPort 5001 -ErrorAction SilentlyContinue
+
+if ($port5001) {
+    Write-Host "[ATTENTION] Le port 5001 est encore occupe:" -ForegroundColor Yellow
+    $port5001 | ForEach-Object {
+        Write-Host "  Etat: $($_.State) | PID: $($_.OwningProcess)"
+    }
+
+    Write-Host ""
+    Write-Host "[ACTION] Tentative de liberation forcee du port 5001..."
+
+    foreach ($conn in $port5001) {
+        $pid = $conn.OwningProcess
+        try {
+            Write-Host "  Arret PID $pid sur port 5001..."
+            Stop-Process -Id $pid -Force -ErrorAction Stop
+            Write-Host "  [OK] PID $pid arrete"
+        } catch {
+            Write-Host "  [ERREUR] Impossible d'arreter PID $pid : $_" -ForegroundColor Red
+        }
+    }
+
+    Start-Sleep -Seconds 2
+
+    # Verification finale
+    $port5001Final = Get-NetTCPConnection -LocalPort 5001 -ErrorAction SilentlyContinue
+
+    if ($port5001Final) {
+        Write-Host ""
+        Write-Host "[ERREUR] Le port 5001 est ENCORE occupe!" -ForegroundColor Red
+        Write-Host "[DIAGNOSTIC] Raisons possibles:" -ForegroundColor Yellow
+        Write-Host "  - Etat TIME_WAIT (attendre 30-120 secondes)"
+        Write-Host "  - Processus non tue correctement"
+        Write-Host "  - Privileges administrateur requis"
+    } else {
+        Write-Host ""
+        Write-Host "[OK] Port 5001 libere!" -ForegroundColor Green
+    }
+} else {
+    Write-Host "[OK] Port 5001 libre!" -ForegroundColor Green
 }
 
 # RESUME FINAL
