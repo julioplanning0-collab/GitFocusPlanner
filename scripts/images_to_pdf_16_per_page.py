@@ -5,6 +5,7 @@ Images are separated by 5mm white spacing.
 """
 
 import os
+import tempfile
 from fpdf import FPDF
 from PIL import Image
 
@@ -121,6 +122,7 @@ def make_pdf(input_dir='.', output_name=None):
                 # Open image to get dimensions
                 with Image.open(img_path) as img:
                     img_width_px, img_height_px = img.size
+                    img_format = img.format
 
                 # Get cell position
                 cell_x, cell_y, cell_w, cell_h = get_cell_position(cell_index)
@@ -130,12 +132,33 @@ def make_pdf(input_dir='.', output_name=None):
                     img_width_px, img_height_px, cell_w, cell_h
                 )
 
+                # FPDF only supports JPEG, PNG, GIF natively
+                # Convert other formats (BMP, WEBP, TIFF, etc.) to temp PNG
+                supported_formats = ('JPEG', 'PNG', 'GIF')
+                temp_file = None
+
+                if img_format not in supported_formats:
+                    # Convert to temporary PNG
+                    with Image.open(img_path) as img:
+                        # Convert to RGB if necessary (for RGBA, P mode, etc.)
+                        if img.mode in ('RGBA', 'P', 'LA'):
+                            img = img.convert('RGB')
+                        temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
+                        img.save(temp_file.name, 'PNG')
+                        img_path_to_use = temp_file.name
+                else:
+                    img_path_to_use = img_path
+
                 # Place image centered in cell
-                pdf.image(img_path,
+                pdf.image(img_path_to_use,
                          x=cell_x + x_off,
                          y=cell_y + y_off,
                          w=disp_w,
                          h=disp_h)
+
+                # Clean up temp file if created
+                if temp_file:
+                    os.unlink(temp_file.name)
 
                 print(f"  Page {page_count}, cellule {cell_index + 1}: {img_file}")
 
