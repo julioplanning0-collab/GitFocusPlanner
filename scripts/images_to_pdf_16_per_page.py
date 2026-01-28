@@ -119,35 +119,42 @@ def make_pdf(input_dir='.', output_name=None):
             img_path = os.path.join(input_dir, img_file)
 
             try:
-                # Open image to get dimensions
+                # Open image to get dimensions and check orientation
                 with Image.open(img_path) as img:
                     img_width_px, img_height_px = img.size
                     img_format = img.format
+                    is_landscape = img_width_px > img_height_px
 
                 # Get cell position
                 cell_x, cell_y, cell_w, cell_h = get_cell_position(cell_index)
 
-                # Calculate image display size and centering
-                disp_w, disp_h, x_off, y_off = fit_image_in_cell(
-                    img_width_px, img_height_px, cell_w, cell_h
-                )
-
                 # FPDF only supports JPEG, PNG, GIF natively
-                # Convert other formats (BMP, WEBP, TIFF, etc.) to temp PNG
+                # Also need temp file if we need to rotate landscape images
                 supported_formats = ('JPEG', 'PNG', 'GIF')
+                needs_conversion = img_format not in supported_formats or is_landscape
                 temp_file = None
 
-                if img_format not in supported_formats:
-                    # Convert to temporary PNG
+                if needs_conversion:
                     with Image.open(img_path) as img:
+                        # Rotate landscape images to portrait
+                        if is_landscape:
+                            img = img.rotate(90, expand=True)
+                            img_width_px, img_height_px = img.size  # Update dimensions after rotation
+
                         # Convert to RGB if necessary (for RGBA, P mode, etc.)
                         if img.mode in ('RGBA', 'P', 'LA'):
                             img = img.convert('RGB')
+
                         temp_file = tempfile.NamedTemporaryFile(suffix='.png', delete=False)
                         img.save(temp_file.name, 'PNG')
                         img_path_to_use = temp_file.name
                 else:
                     img_path_to_use = img_path
+
+                # Calculate image display size and centering (after potential rotation)
+                disp_w, disp_h, x_off, y_off = fit_image_in_cell(
+                    img_width_px, img_height_px, cell_w, cell_h
+                )
 
                 # Place image centered in cell
                 pdf.image(img_path_to_use,
